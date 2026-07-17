@@ -14,6 +14,8 @@ const I18N = {
     "home.preachers": "Prédicateurs", "home.tabFr": "En Français", "home.tabEn": "En Anglais",
     "home.featured": "À la une", "home.empty": "Aucun message disponible pour le moment.",
     "search.title": "Recherche", "search.placeholder": "Rechercher un message, un prédicateur…",
+    "search.sortBy": "Trier par",
+    "search.contentType": "Type de contenu",
     "search.theme": "Thème", "search.preacher": "Prédicateur", "search.year": "Année", "search.month": "Mois",
     "search.results": "Résultats ({n})", "search.noResults": "Aucun résultat pour ces critères.",
     "search.noYears": "Aucune année disponible", "search.noMonths": "Aucun mois disponible",
@@ -68,6 +70,8 @@ const I18N = {
     "home.preachers": "Preachers", "home.tabFr": "In French", "home.tabEn": "In English",
     "home.featured": "Featured", "home.empty": "No messages available at the moment.",
     "search.title": "Search", "search.placeholder": "Search for a message, a preacher…",
+    "search.sortBy": "Sort by",
+    "search.contentType": "Content type",
     "search.theme": "Theme", "search.preacher": "Preacher", "search.year": "Year", "search.month": "Month",
     "search.results": "Results ({n})", "search.noResults": "No results for these filters.",
     "search.noYears": "No years available", "search.noMonths": "No months available",
@@ -167,6 +171,8 @@ const state = {
   searchPreacherId: null,
   searchYear: null,
   searchMonth: null,
+  searchContentType: "predication",
+  sortMode: "recent", // 'recent' | 'recommended'
   currentMessage: null,
   playerMode: "video",
   languageReturnView: "home",
@@ -174,12 +180,23 @@ const state = {
   playlistDraftSelection: new Set(),
 };
 
-function allMessages() {
+const MIN_SERMON_SECONDS = 30 * 60;
+// Filet de sécurité côté app : une prédication doit durer au moins 30 min
+// ET ne pas être classée "louange", peu importe ce que dit le contenu stocké.
+// Les entrées historiques sans durée connue (data.js provisoire) restent acceptées.
+function isSermon(m) {
+  if (m.contentType === "louange") return false;
+  if (m.durationSeconds === undefined || m.durationSeconds === null) return true;
+  return m.durationSeconds >= MIN_SERMON_SECONDS;
+}
+
+function allMessages({ includeAllTypes = false } = {}) {
   return PREACHERS.flatMap((p) => p.messages.map((m) => ({ ...m, preacherId: p.id })))
-    .filter((m) => new Date(m.publishedAt) >= new Date(CONTENT_CUTOFF));
+    .filter((m) => new Date(m.publishedAt) >= new Date(CONTENT_CUTOFF))
+    .filter((m) => includeAllTypes || isSermon(m));
 }
 function getPreacher(id) { return PREACHERS.find((p) => p.id === id); }
-function getMessageById(id) { return allMessages().find((m) => m.id === id); }
+function getMessageById(id) { return allMessages({ includeAllTypes: true }).find((m) => m.id === id); }
 function thumbUrl(videoId) { return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`; }
 function initials(name) {
   return name.replace(/^(Dr|Apôtre|Apostle|Pastor|Évangéliste|Evangéliste)\s+/i, "")
@@ -217,6 +234,34 @@ function recordHistory(messageId) {
   let h = getHistory().filter((id) => id !== messageId);
   h.unshift(messageId);
   writeJSON(LS.history, h.slice(0, 30));
+}
+
+// --- Recommandation : score les messages selon les thèmes et prédicateurs
+// que l'utilisateur écoute/aime le plus (favoris comptent double, historique simple).
+// Sans historique, tout revient à un tri par date (aucun biais possible).
+function buildInterestScores() {
+  const themeScore = {}, preacherScore = {};
+  const bump = (obj, key, weight) => { if (key) obj[key] = (obj[key] || 0) + weight; };
+
+  getFavorites().forEach((f) => {
+    const m = getMessageById(f.messageId);
+    if (m) { bump(themeScore, m.theme, 2); bump(preacherScore, m.preacherId, 2); }
+  });
+  getHistory().forEach((id) => {
+    const m = getMessageById(id);
+    if (m) { bump(themeScore, m.theme, 1); bump(preacherScore, m.preacherId, 1); }
+  });
+  return { themeScore, preacherScore };
+}
+function sortByRecommendation(messages) {
+  const { themeScore, preacherScore } = buildInterestScores();
+  const hasAnySignal = Object.keys(themeScore).length > 0 || Object.keys(preacherScore).length > 0;
+  if (!hasAnySignal) return [...messages].sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+
+  return [...messages]
+    .map((m) => ({ m, score: (themeScore[m.theme] || 0) + (preacherScore[m.preacherId] || 0) }))
+    .sort((a, b) => b.score - a.score || new Date(b.m.publishedAt) - new Date(a.m.publishedAt))
+    .map((x) => x.m);
 }
 
 const ONBOARDING_VIEWS = new Set(["onboarding-language", "onboarding-welcome"]);
@@ -315,6 +360,31 @@ function renderHomePreacherTabs() {
 
 function renderSearch() {
   document.getElementById("searchInput2").value = "";
+
+  const SORT_MODES = [
+    { key: "recent", labelFr: "Plus récent", labelEn: "Most recent" },
+    { key: "recommended", labelFr: "Recommandé pour toi", labelEn: "Recommended for you" },
+  ];
+  document.getElementById("filterSortChips").innerHTML = SORT_MODES.map(
+    (s) => `<button class="chip ${state.sortMode === s.key ? "active" : ""}" data-sort="${s.key}">${currentLang() === "en" ? s.labelEn : s.labelFr}</button>`
+  ).join("");
+  document.querySelectorAll("#filterSortChips .chip").forEach((btn) => btn.addEventListener("click", () => {
+    state.sortMode = btn.dataset.sort; renderSearch();
+  }));
+
+  const CONTENT_TYPES = [
+    { key: "predication", labelFr: "Prédications", labelEn: "Sermons" },
+    { key: "louange", labelFr: "Louange", labelEn: "Worship" },
+    { key: "autre", labelFr: "Autres", labelEn: "Other" },
+    { key: "all", labelFr: "Tout", labelEn: "All" },
+  ];
+  document.getElementById("filterContentTypeChips").innerHTML = CONTENT_TYPES.map(
+    (c) => `<button class="chip ${state.searchContentType === c.key ? "active" : ""}" data-ctype="${c.key}">${currentLang() === "en" ? c.labelEn : c.labelFr}</button>`
+  ).join("");
+  document.querySelectorAll("#filterContentTypeChips .chip").forEach((btn) => btn.addEventListener("click", () => {
+    state.searchContentType = btn.dataset.ctype; renderSearch();
+  }));
+
   document.getElementById("filterThemeChips").innerHTML = THEMES.map(
     (th) => `<button class="chip ${state.searchTheme === th ? "active" : ""}" data-theme="${escapeHtml(th)}">${escapeHtml(themeLabel(th))}</button>`
   ).join("");
@@ -331,8 +401,9 @@ function renderSearch() {
     state.searchPreacherId = state.searchPreacherId === el.dataset.pid ? null : el.dataset.pid; renderSearch();
   }));
 
-  // Filtres Année / Mois — calculés à partir des messages réellement disponibles (>= 1er juin 2026)
-  const dates = allMessages().map((m) => new Date(m.publishedAt));
+  // Filtres Année / Mois — calculés à partir des messages du type sélectionné
+  const baseForDates = state.searchContentType === "all" ? allMessages({ includeAllTypes: true }) : state.searchContentType === "predication" ? allMessages({ includeAllTypes: true }).filter(isSermon) : allMessages({ includeAllTypes: true }).filter((m) => (m.contentType || "predication") === state.searchContentType);
+  const dates = baseForDates.map((m) => new Date(m.publishedAt));
   const years = [...new Set(dates.map((d) => d.getFullYear()))].sort((a, b) => a - b);
   const MONTH_NAMES = t("months");
   const monthsAvailable = [...new Set(
@@ -363,7 +434,10 @@ function renderSearch() {
 }
 function runSearch() {
   const query = (document.getElementById("searchInput2").value || "").trim().toLowerCase();
-  let results = allMessages();
+  let results = allMessages({ includeAllTypes: true });
+  if (state.searchContentType !== "all") {
+    results = state.searchContentType === "predication" ? results.filter(isSermon) : results.filter((m) => (m.contentType || "predication") === state.searchContentType);
+  }
   if (state.searchTheme) results = results.filter((m) => m.theme === state.searchTheme);
   if (state.searchPreacherId) results = results.filter((m) => m.preacherId === state.searchPreacherId);
   if (state.searchYear) results = results.filter((m) => new Date(m.publishedAt).getFullYear() === state.searchYear);
@@ -374,8 +448,8 @@ function runSearch() {
       return m.title.toLowerCase().includes(query) || p.name.toLowerCase().includes(query) || m.theme.toLowerCase().includes(query);
     });
   }
-  // Ordre chronologique (du plus ancien au plus récent), comme demandé
-  results.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  // Tri : chronologique (plus récent en premier) ou recommandé selon les centres d'intérêt
+  results = state.sortMode === "recommended" ? sortByRecommendation(results) : [...results].sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
   document.getElementById("searchResultsTitle").textContent = t("search.results", { n: results.length });
   document.getElementById("searchResults").innerHTML = results.map((m) => messageRowHTML(m)).join("") || `<div class="empty-state">${t("search.noResults")}</div>`;
@@ -756,7 +830,47 @@ const RENDERERS = {
   favorites: renderFavorites, profile: renderProfile, "onboarding-language": renderOnboardingLanguage,
 };
 
+// Sur desktop, les rails horizontaux n'avaient aucun moyen d'aller au-delà
+// de ce qui tient à l'écran (pas de scrollbar visible, pas de molette
+// horizontale native). On convertit la molette verticale en défilement
+// horizontal, et on ajoute le cliquer-glisser à la souris.
+function setupRailScroll() {
+  document.addEventListener("wheel", (e) => {
+    const rail = e.target.closest(".rail");
+    if (!rail || rail.scrollWidth <= rail.clientWidth) return;
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return; // laisse le scroll horizontal natif faire son travail
+    e.preventDefault();
+    rail.scrollLeft += e.deltaY;
+  }, { passive: false });
+
+  let dragState = null;
+  document.addEventListener("mousedown", (e) => {
+    const rail = e.target.closest(".rail");
+    if (!rail) return;
+    dragState = { rail, startX: e.pageX, startScroll: rail.scrollLeft, moved: false };
+    rail.classList.add("dragging");
+  });
+  document.addEventListener("mousemove", (e) => {
+    if (!dragState) return;
+    const dx = e.pageX - dragState.startX;
+    if (Math.abs(dx) > 4) dragState.moved = true;
+    dragState.rail.scrollLeft = dragState.startScroll - dx;
+  });
+  document.addEventListener("mouseup", () => {
+    if (!dragState) return;
+    dragState.rail.classList.remove("dragging");
+    if (dragState.moved) {
+      // Empêche le clic qui suit un glissé d'ouvrir un message par erreur
+      const rail = dragState.rail;
+      const suppress = (ev) => { ev.stopPropagation(); rail.removeEventListener("click", suppress, true); };
+      rail.addEventListener("click", suppress, true);
+    }
+    dragState = null;
+  });
+}
+
 function init() {
+  setupRailScroll();
   applyStaticTranslations();
   refreshTheme();
   setupThemeToggle("themeToggle");

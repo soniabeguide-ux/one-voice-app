@@ -118,7 +118,45 @@ async function fetchVideosSince(uploadsPlaylistId) {
     pageToken = data.nextPageToken;
     if (!pageToken || reachedOlder) break;
   }
+
+  // Deuxième passe : récupère les durées (par lots de 50) et classe chaque vidéo
+  const durations = await fetchDurations(videos.map((v) => v.videoId));
+  videos.forEach((v) => {
+    v.durationSeconds = durations[v.videoId] || 0;
+    v.contentType = classifyContent(v.title, v.durationSeconds);
+  });
+
   return videos;
+}
+
+/** Récupère la durée de jusqu'à 50 vidéos par appel (économique en quota) */
+async function fetchDurations(videoIds) {
+  const durations = {};
+  for (let i = 0; i < videoIds.length; i += 50) {
+    const batch = videoIds.slice(i, i + 50);
+    const data = await api("videos", { part: "contentDetails", id: batch.join(",") });
+    (data.items || []).forEach((item) => { durations[item.id] = parseIsoDuration(item.contentDetails?.duration); });
+  }
+  return durations;
+}
+function parseIsoDuration(iso) {
+  const m = (iso || "").match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 0;
+  return (parseInt(m[1] || 0) * 3600) + (parseInt(m[2] || 0) * 60) + parseInt(m[3] || 0);
+}
+
+// --- Classification prédication / louange / autre ---
+// Règle : la durée est le signal principal (une louange ou une exhortation
+// courte dépasse rarement 15-18 min), affinée par des mots-clés du titre.
+// Imparfait mais transparent — ajustable dans messages.json si besoin.
+const WORSHIP_KEYWORDS = ["louange", "adoration", "worship", "chant ", "chants ", "cantique", "medley", "clip officiel", "official video", "music video", "chanson", "hymne", "praise", " song", "moment musical", "négro spiritual", "negro spiritual"];
+function classifyContent(title, durationSeconds) {
+  const t = title.toLowerCase();
+  const isWorship = WORSHIP_KEYWORDS.some((w) => t.includes(w));
+  const minutes = (durationSeconds || 0) / 60;
+  if (isWorship) return "louange";
+  if (minutes < 30) return "autre"; // seuil : en dessous de 30 min, ce n'est pas une prédication complète
+  return "predication";
 }
 
 /** Devine un thème à partir de mots-clés du titre (approximatif, révisable à la main) */
@@ -165,6 +203,8 @@ for (const preacher of PREACHERS) {
         title: v.title,
         theme: guessTheme(v.title),
         publishedAt: v.publishedAt,
+        durationSeconds: v.durationSeconds,
+        contentType: v.contentType,
       });
     });
     console.log(`✅ ${videos.length} vidéo(s)`);

@@ -4,12 +4,24 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>One Voice — messages de plusieurs hommes de Dieu</title>
-<meta name="description" content="Les messages de plusieurs hommes de Dieu, en français et en anglais, réunis en un seul endroit." />
+<meta name="description" content="One message, one voice, many vessels from GOD" />
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="assets/icons/icon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png" />
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#0d1526" />
+
+<!-- Aperçu lorsque le lien de l'app est partagé (WhatsApp, Facebook, iMessage, etc.) -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="One Voice" />
+<meta property="og:description" content="One message, one voice, many vessels from GOD" />
+<meta property="og:image" content="assets/icons/icon-512.png" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="One Voice" />
+<meta name="twitter:description" content="One message, one voice, many vessels from GOD" />
+<meta name="twitter:image" content="assets/icons/icon-512.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -92,6 +104,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input type="text" id="searchInput2" data-i18n-placeholder="search.placeholder" placeholder="Rechercher un message, un prédicateur…" />
         </div>
+        <div class="filter-label" data-i18n="search.sortBy">Trier par</div>
+        <div class="chip-row" id="filterSortChips" style="margin-bottom:24px"></div>
+        <div class="filter-label" data-i18n="search.contentType">Type de contenu</div>
+        <div class="chip-row" id="filterContentTypeChips" style="margin-bottom:24px"></div>
         <div class="filter-label" data-i18n="search.theme">Thème</div>
         <div class="chip-row" id="filterThemeChips" style="margin-bottom:24px"></div>
         <div class="filter-label" data-i18n="search.preacher">Prédicateur</div>

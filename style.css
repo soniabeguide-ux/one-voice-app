@@ -108,7 +108,8 @@ h1,h2,h3{margin:0}
 .featured .meta{color:rgba(255,255,255,.72); font-size:13px; margin-top:6px}
 
 /* ---------- rail ---------- */
-.rail{display:flex; gap:var(--sp-sm); overflow-x:auto; padding-bottom:6px; scrollbar-width:none}
+.rail{display:flex; gap:var(--sp-sm); overflow-x:auto; padding-bottom:6px; scrollbar-width:none; cursor:grab}
+.rail.dragging{cursor:grabbing; scroll-snap-type:none}
 .rail::-webkit-scrollbar{display:none}
 .rail-item{width:140px; flex-shrink:0; cursor:pointer}
 .rail-item img{width:140px; height:140px; border-radius:var(--radius-lg); object-fit:cover; background:var(--surface); border:1px solid var(--border)}

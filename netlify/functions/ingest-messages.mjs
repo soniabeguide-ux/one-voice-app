@@ -54,19 +54,30 @@ export default async () => {
         if (title === "Deleted video" || title === "Private video") continue;
         if (knownVideoIds.has(videoId)) continue;
 
-        added.push({
-          id: `m-${preacher.id}-${videoId}`,
-          preacherId: preacher.id,
-          videoId,
-          title,
-          theme: guessTheme(title),
-          publishedAt,
-        });
+        added.push({ id: `m-${preacher.id}-${videoId}`, preacherId: preacher.id, videoId, title, theme: guessTheme(title), publishedAt });
         knownVideoIds.add(videoId);
       }
     } catch (err) {
       console.error(`Erreur pour ${preacher.name} :`, err.message);
     }
+  }
+
+  // Récupère la durée des nouvelles vidéos par lots de 50, puis classe chacune
+  if (added.length) {
+    const durations = {};
+    for (let i = 0; i < added.length; i += 50) {
+      const batch = added.slice(i, i + 50).map((m) => m.videoId);
+      try {
+        const d = await api("videos", { part: "contentDetails", id: batch.join(",") }, API_KEY);
+        (d.items || []).forEach((item) => { durations[item.id] = parseIsoDuration(item.contentDetails?.duration); });
+      } catch (err) {
+        console.error("Erreur récupération durées :", err.message);
+      }
+    }
+    added.forEach((m) => {
+      m.durationSeconds = durations[m.videoId] || 0;
+      m.contentType = classifyContent(m.title, m.durationSeconds);
+    });
   }
 
   const merged = [...existing, ...added].sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
@@ -107,6 +118,24 @@ async function resolveUploads(channelUrl, key) {
 
   const d = await api("channels", { part: "contentDetails", id: channelId }, key);
   return d.items?.[0]?.contentDetails?.relatedPlaylists?.uploads || null;
+}
+
+function parseIsoDuration(iso) {
+  const m = (iso || "").match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 0;
+  return (parseInt(m[1] || 0) * 3600) + (parseInt(m[2] || 0) * 60) + parseInt(m[3] || 0);
+}
+
+// Règle : la durée est le signal principal (une louange/exhortation courte
+// dépasse rarement 15-18 min), affinée par des mots-clés du titre.
+const WORSHIP_KEYWORDS = ["louange", "adoration", "worship", "chant ", "chants ", "cantique", "medley", "clip officiel", "official video", "music video", "chanson", "hymne", "praise", " song", "moment musical"];
+function classifyContent(title, durationSeconds) {
+  const t = title.toLowerCase();
+  const isWorship = WORSHIP_KEYWORDS.some((w) => t.includes(w));
+  const minutes = (durationSeconds || 0) / 60;
+  if (isWorship) return "louange";
+  if (minutes < 30) return "autre"; // seuil : en dessous de 30 min, ce n'est pas une prédication complète
+  return "predication";
 }
 
 const THEME_KEYWORDS = {
