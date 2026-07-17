@@ -39,7 +39,7 @@ const I18N = {
     "favorites.title": "Favoris", "favorites.empty": "Appuie sur le cœur d'un message pour l'ajouter ici.",
     "profile.you": "Toi", "profile.memberSince": "Membre depuis {year}",
     "profile.favorites": "Favoris", "profile.playlists": "Playlists", "profile.listened": "Écoutés",
-    "profile.myPlaylists": "Mes playlists", "profile.language": "Langue de l'application", "profile.about": "À propos",
+    "profile.myPlaylists": "Mes playlists", "profile.language": "Langue de l'application", "profile.appearance": "Apparence", "profile.about": "À propos",
     "profile.history": "Historique d'écoute", "profile.noHistory": "Aucune écoute récente.",
     "about.tagline": "Jesus at the center", "about.mission2": "Des prédicateurs francophones et anglophones, réunis en un seul endroit, pour écouter ou regarder où que tu sois, dans ta langue, à ton rythme.",
     "about.whatYouCanDo": "Ce que tu peux faire",
@@ -95,7 +95,7 @@ const I18N = {
     "favorites.title": "Favorites", "favorites.empty": "Tap the heart on a message to add it here.",
     "profile.you": "You", "profile.memberSince": "Member since {year}",
     "profile.favorites": "Favorites", "profile.playlists": "Playlists", "profile.listened": "Listened",
-    "profile.myPlaylists": "My playlists", "profile.language": "App language", "profile.about": "About",
+    "profile.myPlaylists": "My playlists", "profile.language": "App language", "profile.appearance": "Appearance", "profile.about": "About",
     "profile.history": "Listening history", "profile.noHistory": "No recent listening.",
     "about.tagline": "Jesus at the center", "about.mission2": "French and English-speaking preachers, gathered in one place, so you can listen or watch wherever you are, in your language, at your own pace.",
     "about.whatYouCanDo": "What you can do",
@@ -165,7 +165,7 @@ const ICONS = {
 
 const state = {
   viewStack: [],
-  currentView: "onboarding-welcome",
+  currentView: "onboarding",
   langTab: "fr",
   searchTheme: null,
   searchPreacherId: null,
@@ -266,7 +266,7 @@ function sortByRecommendation(messages) {
     .map((x) => x.m);
 }
 
-const ONBOARDING_VIEWS = new Set(["onboarding-language", "onboarding-welcome"]);
+const ONBOARDING_VIEWS = new Set(["onboarding"]);
 function updateChromeVisibility(name) {
   const hideChrome = ONBOARDING_VIEWS.has(name) && state.languageReturnView !== "profile";
   document.getElementById("bottomNav").style.display = hideChrome ? "none" : "";
@@ -316,7 +316,7 @@ function renderHome() {
       <div class="scrim">
         <span class="tag-pill">${escapeHtml(featured.theme)}</span>
         <div class="title">${escapeHtml(featured.title)}</div>
-        <div class="meta">${escapeHtml(fp.name)}</div>
+        <div class="meta">${escapeHtml(fp.name)} · ${formatMessageDate(featured.publishedAt)}</div>
       </div>
     </div>`;
   document.querySelector("#homeFeatured .featured").addEventListener("click", () => openPlayer(featured));
@@ -327,6 +327,7 @@ function renderHome() {
       <img src="${thumbUrl(m.videoId)}" alt="" loading="lazy" />
       <div class="title">${escapeHtml(m.title)}</div>
       <div class="preacher">${escapeHtml(p.name)}</div>
+      <div class="date">${formatMessageDate(m.publishedAt)}</div>
     </div>`;
   }).join("");
   document.querySelectorAll("#homeRail .rail-item").forEach((el) => el.addEventListener("click", () => openPlayer(getMessageById(el.dataset.mid))));
@@ -458,12 +459,20 @@ function runSearch() {
   bindMessageRows(document.getElementById("searchResults"));
 }
 
+function formatMessageDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(currentLang() === "en" ? "en-US" : "fr-FR", { day: "numeric", month: "short", year: "numeric" });
+}
 function messageRowHTML(m, { checkbox = false } = {}) {
   const p = getPreacher(m.preacherId);
   return `<div class="message-row" data-mid="${m.id}">
     ${checkbox ? `<div class="checkbox" data-check="${m.id}"></div>` : ""}
     <img class="thumb" src="${thumbUrl(m.videoId)}" alt="" loading="lazy" />
-    <div class="info"><div class="title">${escapeHtml(m.title)}</div><div class="meta">${escapeHtml(p.name)} · ${escapeHtml(themeLabel(m.theme))}</div></div>
+    <div class="info">
+      <div class="title">${escapeHtml(m.title)}</div>
+      <div class="meta">${escapeHtml(p.name)} · ${escapeHtml(themeLabel(m.theme))}</div>
+      <div class="date">${formatMessageDate(m.publishedAt)}</div>
+    </div>
     ${!checkbox ? `<button class="fav-btn" data-fav="${m.id}">${isFavorite(m.id) ? ICONS.heartFilled : ICONS.heartOutline}</button>` : ""}
   </div>`;
 }
@@ -712,7 +721,7 @@ function renderSeries() {
   document.getElementById("seriesEpisodes").innerHTML = episodes.map((ep, i) => `
     <div class="episode-row" data-mid="${ep.id}">
       <div class="ep-number">E${ep.episodeNumber || i + 1}</div>
-      <div class="info"><div class="title">${escapeHtml(ep.title)}</div></div>
+      <div class="info"><div class="title">${escapeHtml(ep.title)}</div><div class="date">${formatMessageDate(ep.publishedAt)}</div></div>
     </div>`).join("");
   document.querySelectorAll("#seriesEpisodes .episode-row").forEach((el) => el.addEventListener("click", () => openPlayer(getMessageById(el.dataset.mid))));
 }
@@ -780,18 +789,30 @@ function renderProfile() {
   bindMessageRows(container);
 }
 
+const FLAG_FR = '<svg width="32" height="22" viewBox="0 0 3 2"><rect width="1" height="2" fill="#002395"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ED2939"/></svg>';
+const FLAG_EN = '<svg width="32" height="22" viewBox="0 0 32 22"><rect width="32" height="22" fill="#B22234"/><g fill="#fff"><rect y="2" width="32" height="1.7"/><rect y="5.4" width="32" height="1.7"/><rect y="8.8" width="32" height="1.7"/><rect y="12.2" width="32" height="1.7"/><rect y="15.6" width="32" height="1.7"/><rect y="19" width="32" height="1.7"/></g><rect width="13" height="11.7" fill="#3C3B6E"/></svg>';
+const CHEVRON = '<svg width="14" height="14" viewBox="0 0 256 256" style="opacity:.4"><path fill="currentColor" d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/></svg>';
+
 function renderOnboardingLanguage() {
+  const flags = { fr: FLAG_FR, en: FLAG_EN };
   document.getElementById("langRadioList").innerHTML = LANGUAGES.map((l) => `
     <div class="lang-radio-row" data-code="${l.code}">
-      <div class="left"><div class="radio-dot ${state.selectedOnboardingLang === l.code ? "checked" : ""}"></div><span>${l.label}</span></div>
-      <span class="lang-native">${l.native}</span>
+      <div class="flag">${flags[l.code] || ""}</div>
+      <span style="font-family:var(--font-display); font-weight:600; font-size:15.5px; flex:1">${l.label}</span>
+      ${CHEVRON}
     </div>`).join("");
   document.querySelectorAll("#langRadioList .lang-radio-row").forEach((row) => row.addEventListener("click", () => {
     state.selectedOnboardingLang = row.dataset.code;
-    renderOnboardingLanguage();
-    document.getElementById("btnLanguageContinue").disabled = false;
+    localStorage.setItem(LS.language, state.selectedOnboardingLang);
+    applyLanguage();
+    if (state.languageReturnView === "profile") {
+      resetToTab("profile");
+    } else {
+      localStorage.setItem(LS.onboarded, "true");
+      resetToTab("home");
+      if (state.pendingSharedMessageId) { openPlayer(getMessageById(state.pendingSharedMessageId)); state.pendingSharedMessageId = null; }
+    }
   }));
-  document.getElementById("btnLanguageContinue").disabled = !state.selectedOnboardingLang;
 }
 
 function applyScheme(scheme) { document.body.setAttribute("data-scheme", scheme); refreshToggleButtons(); }
@@ -799,10 +820,10 @@ function refreshToggleButtons() {
   const scheme = document.body.getAttribute("data-scheme");
   const mode = localStorage.getItem(LS.theme) || "auto";
   const label = mode === "auto" ? "Auto" : scheme === "dusk" ? "Nuit" : "Jour";
-  ["themeToggle", "themeToggle2"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = (scheme === "dusk" ? ICONS.moon : ICONS.sun) + `<span>${label}</span>`;
-  });
+  const el = document.getElementById("themeToggle");
+  if (el) el.innerHTML = (scheme === "dusk" ? ICONS.moon : ICONS.sun) + `<span>${label}</span>`;
+  const sw = document.getElementById("appearanceSwitch");
+  if (sw) sw.classList.toggle("on", scheme === "dusk");
 }
 function computeAutoScheme() {
   const h = new Date().getHours();
@@ -825,11 +846,23 @@ function setupThemeToggle(btnId) {
   btn.addEventListener("mousedown", () => { timer = setTimeout(() => { localStorage.setItem(LS.theme, "auto"); refreshTheme(); }, 600); });
   ["mouseup", "mouseleave", "touchend"].forEach((evt) => btn.addEventListener(evt, () => clearTimeout(timer)));
 }
+function setupAppearanceSwitch() {
+  const sw = document.getElementById("appearanceSwitch");
+  if (!sw) return;
+  let timer;
+  sw.addEventListener("click", () => {
+    const next = document.body.getAttribute("data-scheme") === "dusk" ? "matin" : "dusk";
+    localStorage.setItem(LS.theme, next);
+    refreshTheme();
+  });
+  sw.addEventListener("mousedown", () => { timer = setTimeout(() => { localStorage.setItem(LS.theme, "auto"); refreshTheme(); }, 600); });
+  ["mouseup", "mouseleave", "touchend"].forEach((evt) => sw.addEventListener(evt, () => clearTimeout(timer)));
+}
 
 const RENDERERS = {
   home: renderHome, search: renderSearch, preacher: renderPreacher, player: renderPlayer, series: renderSeries,
   playlists: renderPlaylists, "playlist-create": renderPlaylistCreate, "playlist-detail": renderPlaylistDetail,
-  favorites: renderFavorites, profile: renderProfile, "onboarding-language": renderOnboardingLanguage,
+  favorites: renderFavorites, profile: renderProfile, "onboarding": renderOnboardingLanguage,
 };
 
 // Sur desktop, les rails horizontaux n'avaient aucun moyen d'aller au-delà
@@ -876,24 +909,9 @@ function init() {
   applyStaticTranslations();
   refreshTheme();
   setupThemeToggle("themeToggle");
-  setupThemeToggle("themeToggle2");
+  setupAppearanceSwitch();
   setInterval(() => { if ((localStorage.getItem(LS.theme) || "auto") === "auto") refreshTheme(); }, 15 * 60 * 1000);
   setInterval(() => { if (state.currentView === "home") document.getElementById("greetingText").textContent = computeGreeting(); }, 5 * 60 * 1000);
-
-  document.getElementById("btnStart").addEventListener("click", () => {
-    localStorage.setItem(LS.onboarded, "true");
-    resetToTab("home");
-    if (state.pendingSharedMessageId) { openPlayer(getMessageById(state.pendingSharedMessageId)); state.pendingSharedMessageId = null; }
-  });
-  document.getElementById("btnLanguageContinue").addEventListener("click", () => {
-    localStorage.setItem(LS.language, state.selectedOnboardingLang);
-    applyLanguage();
-    if (state.languageReturnView === "profile") {
-      resetToTab("profile");
-    } else {
-      navigate("onboarding-welcome");
-    }
-  });
 
   document.querySelectorAll("#bottomNav button, #sideNav button").forEach((btn) => btn.addEventListener("click", () => resetToTab(btn.dataset.nav)));
   document.querySelectorAll("[data-back]").forEach((btn) => btn.addEventListener("click", () => goBackTo(btn.dataset.back)));
@@ -903,7 +921,7 @@ function init() {
   document.getElementById("searchInput").addEventListener("focus", () => navigate("search"));
 
   document.getElementById("menuPlaylists").addEventListener("click", () => navigate("playlists"));
-  document.getElementById("menuLanguage").addEventListener("click", () => { state.languageReturnView = "profile"; navigate("onboarding-language"); });
+  document.getElementById("menuLanguage").addEventListener("click", () => { state.languageReturnView = "profile"; navigate("onboarding"); });
   document.getElementById("menuAbout").addEventListener("click", () => navigate("about"));
 
   document.getElementById("btnCreatePlaylist").addEventListener("click", () => navigate("playlist-create"));
@@ -928,12 +946,9 @@ function init() {
   if (hasLanguage && hasOnboarded) {
     resetToTab("home");
     if (sharedMessage) openPlayer(sharedMessage);
-  } else if (hasLanguage) {
-    if (sharedMessage) state.pendingSharedMessageId = sharedMessage.id;
-    initialShowView("onboarding-welcome");
   } else {
     if (sharedMessage) state.pendingSharedMessageId = sharedMessage.id;
-    initialShowView("onboarding-language");
+    initialShowView("onboarding");
   }
 }
 
