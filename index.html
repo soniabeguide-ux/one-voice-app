@@ -21,10 +21,10 @@
   <aside class="sidebar">
     <div class="side-brand"><img src="assets/logo-1v.png" alt="" style="width:26px;height:26px;border-radius:6px" />One Voice</div>
     <nav class="side-nav" id="sideNav">
-      <button class="side-link active" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Accueil</button>
-      <button class="side-link" data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Recherche</button>
-      <button class="side-link" data-nav="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4c2-.3 3.7.7 4.5 2.2C10.8 4.7 12.5 3.7 14.5 4 18 4.5 19.5 8 17.5 12 15 16.5 12 21 12 21z"/></svg>Favoris</button>
-      <button class="side-link" data-nav="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profil</button>
+      <button class="side-link active" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span data-i18n="nav.home">Accueil</span></button>
+      <button class="side-link" data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span data-i18n="nav.search">Recherche</span></button>
+      <button class="side-link" data-nav="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4c2-.3 3.7.7 4.5 2.2C10.8 4.7 12.5 3.7 14.5 4 18 4.5 19.5 8 17.5 12 15 16.5 12 21 12 21z"/></svg><span data-i18n="nav.favorites">Favoris</span></button>
+      <button class="side-link" data-nav="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span data-i18n="nav.profile">Profil</span></button>
     </nav>
   </aside>
 
@@ -36,21 +36,21 @@
         <div style="text-align:center; margin-bottom:var(--space-lg, 20px)">
           <img src="assets/logo-1v.png" alt="One Voice" style="width:72px; height:72px; margin:0 auto 16px; border-radius:16px; box-shadow:var(--shadow-md)" />
         </div>
-        <h2 style="font-family:var(--font-display); font-weight:700; font-size:28px; text-align:center">Choisis ta langue</h2>
-        <p style="color:var(--text-muted); font-size:14px; margin-top:8px; text-align:center">Tu pourras la modifier plus tard dans ton profil.</p>
+        <h2 style="font-family:var(--font-display); font-weight:700; font-size:28px; text-align:center" data-i18n="lang.title">Choisis ta langue</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-top:8px; text-align:center" data-i18n="lang.subtitle">Tu pourras la modifier plus tard dans ton profil.</p>
         <div class="lang-radio-list" id="langRadioList"></div>
-        <button class="btn-primary" id="btnLanguageContinue" disabled>Continuer</button>
+        <button class="btn-primary" id="btnLanguageContinue" disabled data-i18n="lang.continue">Continuer</button>
       </div>
     </section>
 
     <!-- ============ ONBOARDING — BIENVENUE ============ -->
     <section class="view" id="view-onboarding-welcome">
       <div class="onboarding-welcome" style="background-image:url('assets/hero-worship.jpg')">
-        <span class="kicker">ONE VOICE</span>
-        <h1>Jesus at the center</h1>
-        <p>Parce que Dieu a un seul message mais qu'Il S'est choisi plusieurs voix pour le perfectionnement du corps de Christ, One Voice existe pour rendre ces messages simplement accessibles à tous, chaque jour.</p>
-        <div class="tag-row"><span class="tag">Messages</span><span class="tag">Séries</span><span class="tag">Audio &amp; vidéo</span></div>
-        <button class="btn-primary" id="btnStart">Commencer</button>
+        <span class="kicker" data-i18n="onb.kicker">ONE VOICE</span>
+        <h1 data-i18n="onb.title">Jesus at the center</h1>
+        <p data-i18n="onb.mission">Parce que Dieu a un seul message mais qu'Il S'est choisi plusieurs voix pour le perfectionnement du corps de Christ, One Voice existe pour rendre ces messages simplement accessibles à tous, chaque jour.</p>
+        <div class="tag-row"><span class="tag" data-i18n="onb.tag1">Messages</span><span class="tag" data-i18n="onb.tag2">Séries</span><span class="tag" data-i18n="onb.tag3">Audio &amp; vidéo</span></div>
+        <button class="btn-primary" id="btnStart" data-i18n="onb.start">Commencer</button>
       </div>
     </section>
 
@@ -64,21 +64,21 @@
 
         <div class="search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" id="searchInput" placeholder="Rechercher un prédicateur, un message…" />
+          <input type="text" id="searchInput" data-i18n-placeholder="home.searchPlaceholder" placeholder="Rechercher un prédicateur, un message…" />
         </div>
 
         <div id="homeFeatured"></div>
-        <div class="section-title">Récemment ajoutés</div>
+        <div class="section-title" data-i18n="home.recent">Récemment ajoutés</div>
         <div class="rail" id="homeRail"></div>
-        <div class="section-title">Explorer par thème</div>
+        <div class="section-title" data-i18n="home.explore">Explorer par thème</div>
         <div class="chip-row" id="homeThemeChips"></div>
-        <div class="section-title">Séries en cours</div>
+        <div class="section-title" data-i18n="home.series">Séries en cours</div>
         <div id="homeSeries"></div>
 
-        <div class="section-title">Prédicateurs</div>
+        <div class="section-title" data-i18n="home.preachers">Prédicateurs</div>
         <div class="chip-row" style="margin-bottom:14px">
-          <button class="chip active" id="tabFr">En Français</button>
-          <button class="chip" id="tabEn">En Anglais</button>
+          <button class="chip active" id="tabFr" data-i18n="home.tabFr">En Français</button>
+          <button class="chip" id="tabEn" data-i18n="home.tabEn">En Anglais</button>
         </div>
         <div id="homePreacherList"></div>
       </div>
@@ -87,18 +87,18 @@
     <!-- ============ RECHERCHE & FILTRES ============ -->
     <section class="view" id="view-search">
       <div class="container">
-        <header class="topbar"><span class="greeting" style="font-size:25px">Recherche</span></header>
+        <header class="topbar"><span class="greeting" style="font-size:25px" data-i18n="search.title">Recherche</span></header>
         <div class="search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" id="searchInput2" placeholder="Rechercher un message, un prédicateur…" />
+          <input type="text" id="searchInput2" data-i18n-placeholder="search.placeholder" placeholder="Rechercher un message, un prédicateur…" />
         </div>
-        <div class="filter-label">Thème</div>
+        <div class="filter-label" data-i18n="search.theme">Thème</div>
         <div class="chip-row" id="filterThemeChips" style="margin-bottom:24px"></div>
-        <div class="filter-label">Prédicateur</div>
+        <div class="filter-label" data-i18n="search.preacher">Prédicateur</div>
         <div class="avatar-row" id="filterPreacherRow" style="margin-bottom:24px"></div>
-        <div class="filter-label">Année</div>
+        <div class="filter-label" data-i18n="search.year">Année</div>
         <div class="chip-row" id="filterYearChips" style="margin-bottom:16px"></div>
-        <div class="filter-label">Mois</div>
+        <div class="filter-label" data-i18n="search.month">Mois</div>
         <div class="chip-row" id="filterMonthChips" style="margin-bottom:24px"></div>
         <div class="section-title" id="searchResultsTitle">Résultats</div>
         <div id="searchResults"></div>
@@ -152,7 +152,7 @@
           <button class="action-btn" id="playerAddPlaylist"></button>
         </div>
 
-        <div class="section-title" style="text-align:center; padding-bottom:0"><span style="padding-bottom:0">Partager ce message</span></div>
+        <div class="section-title" style="text-align:center; padding-bottom:0"><span style="padding-bottom:0" data-i18n="player.share">Partager ce message</span></div>
         <div class="share-row" id="shareRow"></div>
 
         <div class="bg-note" id="bgNote"></div>
@@ -168,7 +168,7 @@
         <div class="series-detail-title" id="seriesTitle"></div>
         <div class="series-detail-meta" id="seriesPreacher"></div>
         <p class="series-description" id="seriesDescription"></p>
-        <div class="section-title">Épisodes</div>
+        <div class="section-title" data-i18n="series.episodes">Épisodes</div>
         <div id="seriesEpisodes"></div>
       </div>
     </section>
@@ -177,9 +177,9 @@
     <section class="view" id="view-playlists">
       <div class="container">
         <div class="back-row"><button class="icon-btn" data-back="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button></div>
-        <h2 style="font-family:var(--font-display); font-style:italic; font-weight:600; font-size:32px; margin-bottom:24px">Mes playlists</h2>
+        <h2 style="font-family:var(--font-display); font-style:italic; font-weight:600; font-size:32px; margin-bottom:24px" data-i18n="playlists.title">Mes playlists</h2>
         <div id="playlistsList"></div>
-        <button class="btn-outline" id="btnCreatePlaylist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Créer une playlist</button>
+        <button class="btn-outline" id="btnCreatePlaylist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="playlists.create">Créer une playlist</span></button>
       </div>
     </section>
 
@@ -187,11 +187,11 @@
     <section class="view" id="view-playlist-create">
       <div class="container">
         <div class="back-row"><button class="icon-btn" data-back="playlists"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button></div>
-        <h2 style="font-family:var(--font-display); font-style:italic; font-weight:600; font-size:32px">Créer une playlist</h2>
-        <input type="text" class="text-input" id="playlistNameInput" placeholder="Nom de la playlist" />
+        <h2 style="font-family:var(--font-display); font-style:italic; font-weight:600; font-size:32px" data-i18n="playlistCreate.title">Créer une playlist</h2>
+        <input type="text" class="text-input" id="playlistNameInput" data-i18n-placeholder="playlistCreate.namePlaceholder" placeholder="Nom de la playlist" />
         <div class="selected-count" id="playlistSelectedCount">0 message sélectionné</div>
         <div id="playlistMessageChecklist" style="max-height:50vh; overflow-y:auto"></div>
-        <button class="btn-primary" id="btnConfirmCreatePlaylist" disabled>Créer la playlist</button>
+        <button class="btn-primary" id="btnConfirmCreatePlaylist" disabled data-i18n="playlistCreate.confirm">Créer la playlist</button>
       </div>
     </section>
 
@@ -207,7 +207,7 @@
     <!-- ============ FAVORIS ============ -->
     <section class="view" id="view-favorites">
       <div class="container">
-        <header class="topbar"><span class="greeting" style="font-size:25px">Favoris</span></header>
+        <header class="topbar"><span class="greeting" style="font-size:25px" data-i18n="favorites.title">Favoris</span></header>
         <div id="favoritesList"></div>
       </div>
     </section>
@@ -218,31 +218,31 @@
         <div class="profile-header">
           <div class="profile-identity">
             <div class="avatar" style="width:54px;height:54px;font-size:20px">O</div>
-            <div><div class="name">Toi</div><div class="since" id="profileSince"></div></div>
+            <div><div class="name" data-i18n="profile.you">Toi</div><div class="since" id="profileSince"></div></div>
           </div>
           <button class="toggle" id="themeToggle2"></button>
         </div>
 
         <div class="stats-row">
-          <div class="stat-card"><div class="value" id="statFavorites">0</div><div class="label">Favoris</div></div>
-          <div class="stat-card"><div class="value" id="statPlaylists">0</div><div class="label">Playlists</div></div>
-          <div class="stat-card"><div class="value" id="statHistory">0</div><div class="label">Écoutés</div></div>
+          <div class="stat-card"><div class="value" id="statFavorites">0</div><div class="label" data-i18n="profile.favorites">Favoris</div></div>
+          <div class="stat-card"><div class="value" id="statPlaylists">0</div><div class="label" data-i18n="profile.playlists">Playlists</div></div>
+          <div class="stat-card"><div class="value" id="statHistory">0</div><div class="label" data-i18n="profile.listened">Écoutés</div></div>
         </div>
 
         <div class="menu-row" id="menuPlaylists">
-          <div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Mes playlists</span></div>
+          <div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span data-i18n="profile.myPlaylists">Mes playlists</span></div>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
         </div>
         <div class="menu-row" id="menuLanguage">
-          <div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 4 5.7 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.7-4-9s1.5-6.5 4-9z"/></svg><span>Langue de l'application</span></div>
+          <div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 4 5.7 4 9s-1.5 6.5-4 9c-2.5-2.5-4-5.7-4-9s1.5-6.5 4-9z"/></svg><span data-i18n="profile.language">Langue de l'application</span></div>
           <span class="value" id="profileLanguageValue">Français</span>
         </div>
         <div class="menu-row" id="menuAbout">
-          <div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><span>À propos</span></div>
+          <div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><span data-i18n="profile.about">À propos</span></div>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
         </div>
 
-        <div class="section-title">Historique d'écoute</div>
+        <div class="section-title" data-i18n="profile.history">Historique d'écoute</div>
         <div id="historyList"></div>
       </div>
     </section>
@@ -254,25 +254,25 @@
         <div style="text-align:center; padding:8px 0 24px">
           <img src="assets/logo-1v.png" alt="One Voice" style="width:56px; height:56px; margin:0 auto 12px; border-radius:14px; box-shadow:var(--shadow-md)" />
           <div style="font-family:var(--font-display); font-weight:700; font-size:20px">One Voice</div>
-          <div style="color:var(--accent); font-size:13.5px; font-weight:600; margin-top:2px">Jesus at the center</div>
+          <div style="color:var(--accent); font-size:13.5px; font-weight:600; margin-top:2px" data-i18n="about.tagline">Jesus at the center</div>
         </div>
         <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; margin-bottom:20px">
-          <p style="font-size:14px; line-height:1.65; margin:0 0 12px">Parce que Dieu a un seul message mais qu'Il S'est choisi plusieurs voix pour le perfectionnement du corps de Christ, One Voice existe pour rendre ces messages simplement accessibles à tous, chaque jour.</p>
-          <p style="font-size:14px; line-height:1.65; margin:0; color:var(--text-muted)">Des prédicateurs francophones et anglophones, réunis en un seul endroit, pour écouter ou regarder où que tu sois, dans ta langue, à ton rythme.</p>
+          <p style="font-size:14px; line-height:1.65; margin:0 0 12px" data-i18n="onb.mission">Parce que Dieu a un seul message mais qu'Il S'est choisi plusieurs voix pour le perfectionnement du corps de Christ, One Voice existe pour rendre ces messages simplement accessibles à tous, chaque jour.</p>
+          <p style="font-size:14px; line-height:1.65; margin:0; color:var(--text-muted)" data-i18n="about.mission2">Des prédicateurs francophones et anglophones, réunis en un seul endroit, pour écouter ou regarder où que tu sois, dans ta langue, à ton rythme.</p>
         </div>
 
-        <div class="section-title">Ce que tu peux faire</div>
-        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Rechercher par thème, prédicateur, année ou mois</span></div></div>
-        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg><span>Choisir entre audio et vidéo</span></div></div>
-        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Créer tes propres playlists</span></div></div>
-        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M8 7v10M16 7v10M4 10v4M20 10v4"/></svg><span>Suivre les séries choisies par chaque prédicateur</span></div></div>
-        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-3.9M8.6 13.5l6.8 3.9"/></svg><span>Partager un message sur tes réseaux</span></div></div>
-        <div class="menu-row" style="cursor:default; border-bottom:none"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 15-3.5L23 10M1 14l4.5 4.5A9 9 0 0 0 20.5 15"/></svg><span>Contenu mis à jour automatiquement, chaque jour</span></div></div>
+        <div class="section-title" data-i18n="about.whatYouCanDo">Ce que tu peux faire</div>
+        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span data-i18n="about.f1">Rechercher par thème, prédicateur, année ou mois</span></div></div>
+        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg><span data-i18n="about.f2">Choisir entre audio et vidéo</span></div></div>
+        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span data-i18n="about.f3">Créer tes propres playlists</span></div></div>
+        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M8 7v10M16 7v10M4 10v4M20 10v4"/></svg><span data-i18n="about.f4">Suivre les séries choisies par chaque prédicateur</span></div></div>
+        <div class="menu-row" style="cursor:default"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-3.9M8.6 13.5l6.8 3.9"/></svg><span data-i18n="about.f5">Partager un message sur tes réseaux</span></div></div>
+        <div class="menu-row" style="cursor:default; border-bottom:none"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 15-3.5L23 10M1 14l4.5 4.5A9 9 0 0 0 20.5 15"/></svg><span data-i18n="about.f6">Contenu mis à jour automatiquement, chaque jour</span></div></div>
 
         <div class="stats-row" style="margin-top:24px">
-          <div class="stat-card"><div class="value">FR/EN</div><div class="label">Langues</div></div>
-          <div class="stat-card"><div class="value">Quotidien</div><div class="label">Mises à jour</div></div>
-          <div class="stat-card"><div class="value">Gratuit</div><div class="label">Accès</div></div>
+          <div class="stat-card"><div class="value">FR/EN</div><div class="label" data-i18n="about.languages">Langues</div></div>
+          <div class="stat-card"><div class="value" data-i18n="about.updatesValue">Quotidien</div><div class="label" data-i18n="about.updates">Mises à jour</div></div>
+          <div class="stat-card"><div class="value" data-i18n="about.accessValue">Gratuit</div><div class="label" data-i18n="about.access">Accès</div></div>
         </div>
       </div>
     </section>
@@ -293,13 +293,12 @@
 <div class="share-toast" id="shareToast"></div>
 
 <nav class="bottom-nav" id="bottomNav">
-  <button data-nav="home" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Accueil</button>
-  <button data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Recherche</button>
-  <button data-nav="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4c2-.3 3.7.7 4.5 2.2C10.8 4.7 12.5 3.7 14.5 4 18 4.5 19.5 8 17.5 12 15 16.5 12 21 12 21z"/></svg>Favoris</button>
-  <button data-nav="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Profil</button>
+  <button data-nav="home" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span data-i18n="nav.home">Accueil</span></button>
+  <button data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span data-i18n="nav.search">Recherche</span></button>
+  <button data-nav="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4c2-.3 3.7.7 4.5 2.2C10.8 4.7 12.5 3.7 14.5 4 18 4.5 19.5 8 17.5 12 15 16.5 12 21 12 21z"/></svg><span data-i18n="nav.favorites">Favoris</span></button>
+  <button data-nav="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span data-i18n="nav.profile">Profil</span></button>
 </nav>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>

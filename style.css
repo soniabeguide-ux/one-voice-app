@@ -260,7 +260,7 @@ h1,h2,h3{margin:0}
 .radio-dot{width:20px; height:20px; border-radius:50%; border:1.5px solid var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0}
 .radio-dot.checked::after{content:""; width:10px; height:10px; border-radius:50%; background:var(--accent)}
 .lang-native{color:var(--text-muted); font-size:14px}
-.screen-padded{padding-top:56px; padding-bottom:var(--sp-xl)}
+.screen-padded{min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; justify-content:center; padding-top:var(--sp-xl); padding-bottom:var(--sp-xl)}
 
 /* ---------- profil ---------- */
 .profile-header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:var(--sp-xl)}

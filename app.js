@@ -1,6 +1,143 @@
 // ============================================================
-// One Voice — logique finale de l'application
+// i18n — dictionnaire FR/EN et fonctions de traduction
 // ============================================================
+const I18N = {
+  fr: {
+    "nav.home": "Accueil", "nav.search": "Recherche", "nav.favorites": "Favoris", "nav.profile": "Profil",
+    "lang.title": "Choisis ta langue", "lang.subtitle": "Tu pourras la modifier plus tard dans ton profil.", "lang.continue": "Continuer",
+    "onb.kicker": "ONE VOICE", "onb.title": "Jesus at the center",
+    "onb.mission": "Parce que Dieu a un seul message mais qu'Il S'est choisi plusieurs voix pour le perfectionnement du corps de Christ, One Voice existe pour rendre ces messages simplement accessibles à tous, chaque jour.",
+    "onb.tag1": "Messages", "onb.tag2": "Séries", "onb.tag3": "Audio & vidéo", "onb.start": "Commencer",
+    "greeting.morning": "Bonjour", "greeting.afternoon": "Bon après-midi", "greeting.evening": "Bonsoir",
+    "home.searchPlaceholder": "Rechercher un prédicateur, un message…",
+    "home.recent": "Récemment ajoutés", "home.explore": "Explorer par thème", "home.series": "Séries en cours",
+    "home.preachers": "Prédicateurs", "home.tabFr": "En Français", "home.tabEn": "En Anglais",
+    "home.featured": "À la une", "home.empty": "Aucun message disponible pour le moment.",
+    "search.title": "Recherche", "search.placeholder": "Rechercher un message, un prédicateur…",
+    "search.theme": "Thème", "search.preacher": "Prédicateur", "search.year": "Année", "search.month": "Mois",
+    "search.results": "Résultats ({n})", "search.noResults": "Aucun résultat pour ces critères.",
+    "search.noYears": "Aucune année disponible", "search.noMonths": "Aucun mois disponible",
+    "preacher.recommendedSeries": "Séries recommandées par {name}",
+    "preacher.messages": "Ses messages ({n})", "preacher.empty": "Aucun message disponible pour le moment.",
+    "preacher.viewChannel": "Voir « {name} » sur YouTube ↗",
+    "series.badge": "✦ Choisi par le prédicateur", "series.count": "{n} message sélectionné|{n} messages sélectionnés",
+    "series.episodeCount": "{n} épisode|{n} épisodes",
+    "series.episodes": "Épisodes",
+    "player.share": "Partager ce message", "player.favorite": "Favori", "player.playlist": "Playlist",
+    "player.mode.video": "Vidéo", "player.mode.audio": "Audio",
+    "player.audioNote": "Mode audio : la vidéo est masquée, seul le son est diffusé. La lecture s'interrompt si l'écran se verrouille (limite YouTube sur mobile).",
+    "player.videoNote": "Contenu vidéo YouTube — la lecture s'interrompt si l'écran se verrouille.",
+    "player.fromSeries": "Depuis « {name} »",
+    "playlists.title": "Mes playlists", "playlists.create": "Créer une playlist", "playlists.empty": "Aucune playlist pour l'instant.",
+    "playlists.count": "{n} message|{n} messages",
+    "playlistCreate.title": "Créer une playlist", "playlistCreate.namePlaceholder": "Nom de la playlist",
+    "playlistCreate.selectedCount": "{n} message sélectionné|{n} messages sélectionnés",
+    "playlistCreate.confirm": "Créer la playlist", "playlistCreate.creating": "Création…",
+    "playlistDetail.empty": "Playlist vide.",
+    "favorites.title": "Favoris", "favorites.empty": "Appuie sur le cœur d'un message pour l'ajouter ici.",
+    "profile.you": "Toi", "profile.memberSince": "Membre depuis {year}",
+    "profile.favorites": "Favoris", "profile.playlists": "Playlists", "profile.listened": "Écoutés",
+    "profile.myPlaylists": "Mes playlists", "profile.language": "Langue de l'application", "profile.about": "À propos",
+    "profile.history": "Historique d'écoute", "profile.noHistory": "Aucune écoute récente.",
+    "about.tagline": "Jesus at the center", "about.mission2": "Des prédicateurs francophones et anglophones, réunis en un seul endroit, pour écouter ou regarder où que tu sois, dans ta langue, à ton rythme.",
+    "about.whatYouCanDo": "Ce que tu peux faire",
+    "about.f1": "Rechercher par thème, prédicateur, année ou mois", "about.f2": "Choisir entre audio et vidéo",
+    "about.f3": "Créer tes propres playlists", "about.f4": "Suivre les séries choisies par chaque prédicateur",
+    "about.f5": "Partager un message sur tes réseaux", "about.f6": "Contenu mis à jour automatiquement, chaque jour",
+    "about.languages": "Langues", "about.format": "Format", "about.updates": "Mises à jour", "about.access": "Accès",
+    "about.formatValue": "Audio & vidéo", "about.updatesValue": "Quotidien", "about.accessValue": "Gratuit",
+    "install.title": "Installer One Voice", "install.body": "Ajoute One Voice à ton écran d'accueil pour un accès rapide, comme une vraie application.",
+    "install.action": "Installer l'application", "install.iosBody": "Appuie sur le bouton Partager de Safari, puis choisis « Sur l'écran d'accueil » pour installer One Voice.",
+    "install.gotIt": "J'ai compris",
+    "theme.auto": "Auto", "theme.night": "Nuit", "theme.day": "Jour",
+    "share.text": "« {title} » — {preacher}. Retrouve ce message sur l'application One Voice disponible gratuitement.",
+    "share.copied": "Lien copié !", "share.copyFailed": "Impossible de copier — copie manuellement l'adresse.",
+    "playlist.promptExisting": "Tape le numéro d'une playlist existante, ou un nouveau nom pour en créer une :",
+    "months": ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"],
+    "themes": { "Foi": "Foi", "Couple & Famille": "Couple & Famille", "Finances": "Finances", "Guérison": "Guérison", "Combat spirituel": "Combat spirituel", "Prière": "Prière", "Jeunesse": "Jeunesse" },
+  },
+  en: {
+    "nav.home": "Home", "nav.search": "Search", "nav.favorites": "Favorites", "nav.profile": "Profile",
+    "lang.title": "Choose your language", "lang.subtitle": "You can change this later in your profile.", "lang.continue": "Continue",
+    "onb.kicker": "ONE VOICE", "onb.title": "Jesus at the center",
+    "onb.mission": "Because God has one message but chose several voices for the perfecting of the body of Christ, One Voice exists to make these messages simply accessible to everyone, every day.",
+    "onb.tag1": "Messages", "onb.tag2": "Series", "onb.tag3": "Audio & video", "onb.start": "Get started",
+    "greeting.morning": "Good morning", "greeting.afternoon": "Good afternoon", "greeting.evening": "Good evening",
+    "home.searchPlaceholder": "Search for a preacher, a message…",
+    "home.recent": "Recently added", "home.explore": "Explore by theme", "home.series": "Ongoing series",
+    "home.preachers": "Preachers", "home.tabFr": "In French", "home.tabEn": "In English",
+    "home.featured": "Featured", "home.empty": "No messages available at the moment.",
+    "search.title": "Search", "search.placeholder": "Search for a message, a preacher…",
+    "search.theme": "Theme", "search.preacher": "Preacher", "search.year": "Year", "search.month": "Month",
+    "search.results": "Results ({n})", "search.noResults": "No results for these filters.",
+    "search.noYears": "No years available", "search.noMonths": "No months available",
+    "preacher.recommendedSeries": "Series recommended by {name}",
+    "preacher.messages": "Their messages ({n})", "preacher.empty": "No messages available at the moment.",
+    "preacher.viewChannel": "View \"{name}\" on YouTube ↗",
+    "series.badge": "✦ Selected by the preacher", "series.count": "{n} message selected|{n} messages selected",
+    "series.episodeCount": "{n} episode|{n} episodes",
+    "series.episodes": "Episodes",
+    "player.share": "Share this message", "player.favorite": "Favorite", "player.playlist": "Playlist",
+    "player.mode.video": "Video", "player.mode.audio": "Audio",
+    "player.audioNote": "Audio mode: the video is hidden, only the sound plays. Playback stops if the screen locks (YouTube limitation on mobile).",
+    "player.videoNote": "YouTube video content — playback stops if the screen locks.",
+    "player.fromSeries": "From \"{name}\"",
+    "playlists.title": "My playlists", "playlists.create": "Create a playlist", "playlists.empty": "No playlists yet.",
+    "playlists.count": "{n} message|{n} messages",
+    "playlistCreate.title": "Create a playlist", "playlistCreate.namePlaceholder": "Playlist name",
+    "playlistCreate.selectedCount": "{n} message selected|{n} messages selected",
+    "playlistCreate.confirm": "Create playlist", "playlistCreate.creating": "Creating…",
+    "playlistDetail.empty": "Empty playlist.",
+    "favorites.title": "Favorites", "favorites.empty": "Tap the heart on a message to add it here.",
+    "profile.you": "You", "profile.memberSince": "Member since {year}",
+    "profile.favorites": "Favorites", "profile.playlists": "Playlists", "profile.listened": "Listened",
+    "profile.myPlaylists": "My playlists", "profile.language": "App language", "profile.about": "About",
+    "profile.history": "Listening history", "profile.noHistory": "No recent listening.",
+    "about.tagline": "Jesus at the center", "about.mission2": "French and English-speaking preachers, gathered in one place, so you can listen or watch wherever you are, in your language, at your own pace.",
+    "about.whatYouCanDo": "What you can do",
+    "about.f1": "Search by theme, preacher, year or month", "about.f2": "Choose between audio and video",
+    "about.f3": "Create your own playlists", "about.f4": "Follow the series chosen by each preacher",
+    "about.f5": "Share a message on your social networks", "about.f6": "Content updated automatically, every day",
+    "about.languages": "Languages", "about.format": "Format", "about.updates": "Updates", "about.access": "Access",
+    "about.formatValue": "Audio & video", "about.updatesValue": "Daily", "about.accessValue": "Free",
+    "install.title": "Install One Voice", "install.body": "Add One Voice to your home screen for quick access, just like a real app.",
+    "install.action": "Install the app", "install.iosBody": "Tap the Share button in Safari, then choose \"Add to Home Screen\" to install One Voice.",
+    "install.gotIt": "Got it",
+    "theme.auto": "Auto", "theme.night": "Night", "theme.day": "Day",
+    "share.text": "\"{title}\" — {preacher}. Find this message on the One Voice app, available for free.",
+    "share.copied": "Link copied!", "share.copyFailed": "Couldn't copy — copy the address manually.",
+    "playlist.promptExisting": "Type the number of an existing playlist, or a new name to create one:",
+    "months": ["January","February","March","April","May","June","July","August","September","October","November","December"],
+    "themes": { "Foi": "Faith", "Couple & Famille": "Couple & Family", "Finances": "Finances", "Guérison": "Healing", "Combat spirituel": "Spiritual warfare", "Prière": "Prayer", "Jeunesse": "Youth" },
+  },
+};
+function currentLang() { return localStorage.getItem("ov:language") || "fr"; }
+function t(key, vars) {
+  const dict = I18N[currentLang()] || I18N.fr;
+  let str = dict[key];
+  if (str === undefined) str = I18N.fr[key] || key;
+  if (Array.isArray(str)) return str;
+  if (vars) {
+    Object.entries(vars).forEach(([k, v]) => { str = str.replaceAll(`{${k}}`, v); });
+  }
+  return str;
+}
+function tPlural(key, n) {
+  const [singular, plural] = t(key).split("|");
+  return (n === 1 ? singular : plural || singular).replaceAll("{n}", n);
+}
+function themeLabel(themeKey) { return (I18N[currentLang()] || I18N.fr).themes[themeKey] || themeKey; }
+function applyStaticTranslations() {
+  document.documentElement.lang = currentLang();
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+}
+function applyLanguage() {
+  applyStaticTranslations();
+  if (state.currentView === "home") document.getElementById("greetingText").textContent = computeGreeting();
+  refreshToggleButtons();
+  RENDERERS[state.currentView] && RENDERERS[state.currentView]();
+}
 
 const LANGUAGES = [
   { code: "fr", label: "Français", native: "Français" },
@@ -51,9 +188,9 @@ function initials(name) {
 function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str || ""; return d.innerHTML; }
 function computeGreeting() {
   const h = new Date().getHours();
-  if (h < 12) return "Bonjour";
-  if (h < 18) return "Bon après-midi";
-  return "Bonsoir";
+  if (h < 12) return t("greeting.morning");
+  if (h < 18) return t("greeting.afternoon");
+  return t("greeting.evening");
 }
 
 const LS = { onboarded: "ov:onboarded", language: "ov:language", favorites: "ov:favorites", playlists: "ov:playlists", history: "ov:history", theme: "ov:theme-mode" };
@@ -113,7 +250,7 @@ function renderHome() {
   const msgs = allMessages().sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
   if (msgs.length === 0) {
-    document.getElementById("homeFeatured").innerHTML = `<div class="empty-state">Aucun message disponible depuis le 1er juin 2026 pour le moment.</div>`;
+    document.getElementById("homeFeatured").innerHTML = `<div class="empty-state">${t("home.empty")}</div>`;
     document.getElementById("homeRail").innerHTML = "";
     document.getElementById("homeThemeChips").innerHTML = "";
     document.getElementById("homeSeries").innerHTML = "";
@@ -147,7 +284,7 @@ function renderHome() {
   }).join("");
   document.querySelectorAll("#homeRail .rail-item").forEach((el) => el.addEventListener("click", () => openPlayer(getMessageById(el.dataset.mid))));
 
-  document.getElementById("homeThemeChips").innerHTML = THEMES.map((t) => `<button class="chip" data-theme="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join("");
+  document.getElementById("homeThemeChips").innerHTML = THEMES.map((th) => `<button class="chip" data-theme="${escapeHtml(th)}">${escapeHtml(themeLabel(th))}</button>`).join("");
   document.querySelectorAll("#homeThemeChips .chip").forEach((btn) => btn.addEventListener("click", () => {
     state.searchTheme = btn.dataset.theme; state.searchPreacherId = null; navigate("search");
   }));
@@ -157,7 +294,7 @@ function renderHome() {
     const episodes = getSeriesMessages(s.id);
     return `<div class="series-row" data-sid="${s.id}">
       <img class="cover" src="${episodes[0] ? thumbUrl(episodes[0].videoId) : ""}" alt="" />
-      <div><div class="title">${escapeHtml(s.title)}</div><div class="meta">${escapeHtml(p.name)} · ${episodes.length} épisode${episodes.length > 1 ? "s" : ""}</div></div>
+      <div><div class="title">${escapeHtml(s.title)}</div><div class="meta">${escapeHtml(p.name)} · ${tPlural("series.episodeCount", episodes.length)}</div></div>
     </div>`;
   }).join("");
   document.querySelectorAll("#homeSeries .series-row").forEach((el) => el.addEventListener("click", () => openSeries(el.dataset.sid)));
@@ -179,7 +316,7 @@ function renderHomePreacherTabs() {
 function renderSearch() {
   document.getElementById("searchInput2").value = "";
   document.getElementById("filterThemeChips").innerHTML = THEMES.map(
-    (t) => `<button class="chip ${state.searchTheme === t ? "active" : ""}" data-theme="${escapeHtml(t)}">${escapeHtml(t)}</button>`
+    (th) => `<button class="chip ${state.searchTheme === th ? "active" : ""}" data-theme="${escapeHtml(th)}">${escapeHtml(themeLabel(th))}</button>`
   ).join("");
   document.querySelectorAll("#filterThemeChips .chip").forEach((btn) => btn.addEventListener("click", () => {
     state.searchTheme = state.searchTheme === btn.dataset.theme ? null : btn.dataset.theme; renderSearch();
@@ -197,7 +334,7 @@ function renderSearch() {
   // Filtres Année / Mois — calculés à partir des messages réellement disponibles (>= 1er juin 2026)
   const dates = allMessages().map((m) => new Date(m.publishedAt));
   const years = [...new Set(dates.map((d) => d.getFullYear()))].sort((a, b) => a - b);
-  const MONTH_NAMES = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+  const MONTH_NAMES = t("months");
   const monthsAvailable = [...new Set(
     dates.filter((d) => !state.searchYear || d.getFullYear() === state.searchYear).map((d) => d.getMonth())
   )].sort((a, b) => a - b);
@@ -240,8 +377,8 @@ function runSearch() {
   // Ordre chronologique (du plus ancien au plus récent), comme demandé
   results.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
 
-  document.getElementById("searchResultsTitle").textContent = `Résultats (${results.length})`;
-  document.getElementById("searchResults").innerHTML = results.map((m) => messageRowHTML(m)).join("") || `<div class="empty-state">Aucun résultat pour ces critères.</div>`;
+  document.getElementById("searchResultsTitle").textContent = t("search.results", { n: results.length });
+  document.getElementById("searchResults").innerHTML = results.map((m) => messageRowHTML(m)).join("") || `<div class="empty-state">${t("search.noResults")}</div>`;
   bindMessageRows(document.getElementById("searchResults"));
 }
 
@@ -250,7 +387,7 @@ function messageRowHTML(m, { checkbox = false } = {}) {
   return `<div class="message-row" data-mid="${m.id}">
     ${checkbox ? `<div class="checkbox" data-check="${m.id}"></div>` : ""}
     <img class="thumb" src="${thumbUrl(m.videoId)}" alt="" loading="lazy" />
-    <div class="info"><div class="title">${escapeHtml(m.title)}</div><div class="meta">${escapeHtml(p.name)} · ${escapeHtml(m.theme)}</div></div>
+    <div class="info"><div class="title">${escapeHtml(m.title)}</div><div class="meta">${escapeHtml(p.name)} · ${escapeHtml(themeLabel(m.theme))}</div></div>
     ${!checkbox ? `<button class="fav-btn" data-fav="${m.id}">${isFavorite(m.id) ? ICONS.heartFilled : ICONS.heartOutline}</button>` : ""}
   </div>`;
 }
@@ -282,7 +419,7 @@ function renderPreacher() {
   document.getElementById("preacherBio").textContent = p.bio;
   const link = document.getElementById("preacherChannelLink");
   link.href = p.channelUrl;
-  link.textContent = `Voir "${p.channelName}" sur YouTube ↗`;
+  link.textContent = t("preacher.viewChannel", { name: p.channelName });
 
   // Séries recommandées par ce prédicateur
   const preacherSeries = SERIES.filter((s) => s.preacherId === p.id);
@@ -290,16 +427,16 @@ function renderPreacher() {
   const seriesContainer = document.getElementById("preacherSeries");
   if (preacherSeries.length) {
     seriesTitle.style.display = "";
-    seriesTitle.textContent = `Séries recommandées par ${p.name}`;
+    seriesTitle.textContent = t("preacher.recommendedSeries", { name: p.name });
     seriesContainer.innerHTML = preacherSeries.map((s) => {
       const episodes = getSeriesMessages(s.id);
       const covers = episodes.slice(0, 4).map((ep) => `<img src="${thumbUrl(ep.videoId)}" alt="" />`).join("");
       return `<div class="series-rec-card" data-sid="${s.id}">
         <div class="covers">${covers}</div>
         <div class="info">
-          <span class="badge">✦ Choisi par le prédicateur</span>
+          <span class="badge">${t("series.badge")}</span>
           <div class="name">${escapeHtml(s.title)}</div>
-          <div class="count">${episodes.length} message${episodes.length > 1 ? "s" : ""} sélectionné${episodes.length > 1 ? "s" : ""}</div>
+          <div class="count">${tPlural("series.count", episodes.length)}</div>
         </div>
       </div>`;
     }).join("");
@@ -310,12 +447,12 @@ function renderPreacher() {
   }
 
   const available = p.messages.filter((m) => new Date(m.publishedAt) >= new Date(CONTENT_CUTOFF));
-  document.getElementById("preacherMessagesTitle").textContent = `Ses messages (${available.length})`;
+  document.getElementById("preacherMessagesTitle").textContent = t("preacher.messages", { n: available.length });
   const sorted = [...available].sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
   const container = document.getElementById("preacherMessages");
   container.innerHTML = sorted.length
     ? sorted.map((m) => messageRowHTML({ ...m, preacherId: p.id })).join("")
-    : `<div class="empty-state">Aucun message disponible depuis le 1er juin 2026 pour le moment.</div>`;
+    : `<div class="empty-state">${t("preacher.empty")}</div>`;
   bindMessageRows(container);
 }
 
@@ -343,28 +480,26 @@ function renderPlayer() {
   const favBtn = document.getElementById("playerFav");
   function refreshFav() {
     favBtn.classList.toggle("active", isFavorite(m.id));
-    favBtn.innerHTML = (isFavorite(m.id) ? ICONS.heartFilled : ICONS.heartOutline) + "<span>Favori</span>";
+    favBtn.innerHTML = (isFavorite(m.id) ? ICONS.heartFilled : ICONS.heartOutline) + `<span>${t("player.favorite")}</span>`;
   }
   refreshFav();
   favBtn.onclick = () => { toggleFavorite(m.id); refreshFav(); };
 
   const plBtn = document.getElementById("playerAddPlaylist");
-  plBtn.innerHTML = ICONS.playlist + "<span>Playlist</span>";
+  plBtn.innerHTML = ICONS.playlist + `<span>${t("player.playlist")}</span>`;
   plBtn.onclick = () => quickAddToPlaylist(m.id);
 
   const modeToggle = document.getElementById("modeToggle");
   modeToggle.innerHTML = `
-    <button class="mode-btn" data-mode="video">${ICONS.video}Vidéo</button>
-    <button class="mode-btn" data-mode="audio">${ICONS.headphones}Audio</button>`;
+    <button class="mode-btn" data-mode="video">${ICONS.video}${t("player.mode.video")}</button>
+    <button class="mode-btn" data-mode="audio">${ICONS.headphones}${t("player.mode.audio")}</button>`;
   modeToggle.querySelectorAll(".mode-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.mode === state.playerMode);
     btn.onclick = () => {
       state.playerMode = btn.dataset.mode;
       applyPlayerMode();
       modeToggle.querySelectorAll(".mode-btn").forEach((b) => b.classList.toggle("active", b.dataset.mode === state.playerMode));
-      document.getElementById("bgNote").textContent = state.playerMode === "audio"
-        ? "Mode audio : la vidéo est masquée, seul le son est diffusé. La lecture s'interrompt si l'écran se verrouille (limite YouTube sur mobile)."
-        : "Contenu vidéo YouTube — la lecture s'interrompt si l'écran se verrouille.";
+      document.getElementById("bgNote").textContent = state.playerMode === "audio" ? t("player.audioNote") : t("player.videoNote");
     };
   });
 
@@ -372,9 +507,7 @@ function renderPlayer() {
   if (!document.getElementById("ytPlayerTarget")) cover.innerHTML = `<div id="ytPlayerTarget"></div><img id="coverFallback" src="${thumbUrl(m.videoId)}" alt="" style="display:none" />`;
   document.getElementById("coverFallback").src = thumbUrl(m.videoId);
   applyPlayerMode();
-  document.getElementById("bgNote").textContent = state.playerMode === "audio"
-    ? "Mode audio : la vidéo est masquée, seul le son est diffusé. La lecture s'interrompt si l'écran se verrouille (limite YouTube sur mobile)."
-    : "Contenu vidéo YouTube — la lecture s'interrompt si l'écran se verrouille.";
+  document.getElementById("bgNote").textContent = state.playerMode === "audio" ? t("player.audioNote") : t("player.videoNote");
 
   const rateRow = document.getElementById("rateRow");
   rateRow.innerHTML = [0.75, 1, 1.25, 1.5].map((r) => `<button class="rate-chip ${r === 1 ? "active" : ""}" data-rate="${r}">${r}×</button>`).join("");
@@ -440,7 +573,7 @@ function formatSeconds(s) { s = Math.floor(s || 0); return `${Math.floor(s / 60)
 function quickAddToPlaylist(messageId) {
   const playlists = getPlaylists();
   const names = playlists.map((p, i) => `${i + 1}. ${p.name}`).join("\n");
-  const choice = prompt((names ? names + "\n\n" : "") + "Tape le numéro d'une playlist existante, ou un nouveau nom pour en créer une :");
+  const choice = prompt((names ? names + "\n\n" : "") + t("playlist.promptExisting"));
   if (!choice) return;
   const asIndex = parseInt(choice, 10);
   if (!isNaN(asIndex) && playlists[asIndex - 1]) {
@@ -458,7 +591,7 @@ function shareUrlFor(message) {
   return url.toString();
 }
 function shareTextFor(message, preacher) {
-  return `"${message.title}" — ${preacher.name}. Retrouve ce message sur l'application One Voice disponible gratuitement.`;
+  return t("share.text", { title: message.title, preacher: preacher.name });
 }
 function renderShareRow(message, preacher) {
   const url = shareUrlFor(message);
@@ -472,12 +605,12 @@ function renderShareRow(message, preacher) {
     { icon: ICONS.telegram, href: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}` },
   ];
 
-  row.innerHTML = links.map((l) => `<a class="share-btn" href="${l.href}" target="_blank" rel="noopener" title="Partager">${l.icon}</a>`).join("")
-    + `<button class="share-btn" id="shareCopyBtn" title="Copier le lien">${ICONS.link}</button>`;
+  row.innerHTML = links.map((l) => `<a class="share-btn" href="${l.href}" target="_blank" rel="noopener" title="${t("player.share")}">${l.icon}</a>`).join("")
+    + `<button class="share-btn" id="shareCopyBtn" title="${t("player.share")}">${ICONS.link}</button>`;
 
   document.getElementById("shareCopyBtn").addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(`${text} ${url}`); showToast("Lien copié !"); }
-    catch { showToast("Impossible de copier — copie manuellement l'adresse."); }
+    try { await navigator.clipboard.writeText(`${text} ${url}`); showToast(t("share.copied")); }
+    catch { showToast(t("share.copyFailed")); }
   });
 }
 function showToast(text) {
@@ -514,8 +647,8 @@ function renderPlaylists() {
   container.innerHTML = list.length ? list.map((pl) => `
     <div class="playlist-card" data-plid="${pl.id}">
       <div class="cover"></div>
-      <div><div class="title">${escapeHtml(pl.name)}</div><div class="count">${pl.messageIds.length} message${pl.messageIds.length > 1 ? "s" : ""}</div></div>
-    </div>`).join("") : `<div class="empty-state">Aucune playlist pour l'instant.</div>`;
+      <div><div class="title">${escapeHtml(pl.name)}</div><div class="count">${tPlural("playlists.count", pl.messageIds.length)}</div></div>
+    </div>`).join("") : `<div class="empty-state">${t("playlists.empty")}</div>`;
   container.querySelectorAll(".playlist-card").forEach((el) => el.addEventListener("click", () => openPlaylistDetail(el.dataset.plid)));
 }
 let currentPlaylistId = null;
@@ -526,7 +659,7 @@ function renderPlaylistDetail() {
   document.getElementById("playlistDetailTitle").textContent = pl.name;
   const msgs = pl.messageIds.map(getMessageById).filter(Boolean);
   const container = document.getElementById("playlistDetailMessages");
-  container.innerHTML = msgs.map((m) => messageRowHTML(m)).join("") || `<div class="empty-state">Playlist vide.</div>`;
+  container.innerHTML = msgs.map((m) => messageRowHTML(m)).join("") || `<div class="empty-state">${t("playlistDetail.empty")}</div>`;
   bindMessageRows(container);
 }
 function renderPlaylistCreate() {
@@ -545,7 +678,7 @@ function renderPlaylistCreate() {
 }
 function updatePlaylistCreateUI() {
   const count = state.playlistDraftSelection.size;
-  document.getElementById("playlistSelectedCount").textContent = `${count} message${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}`;
+  document.getElementById("playlistSelectedCount").textContent = tPlural("playlistCreate.selectedCount", count);
   const name = document.getElementById("playlistNameInput").value.trim();
   document.getElementById("btnConfirmCreatePlaylist").disabled = !(name && count > 0);
 }
@@ -553,7 +686,7 @@ function updatePlaylistCreateUI() {
 function renderFavorites() {
   const favs = getFavorites().map((f) => getMessageById(f.messageId)).filter(Boolean);
   const container = document.getElementById("favoritesList");
-  container.innerHTML = favs.length ? favs.map((m) => messageRowHTML(m)).join("") : `<div class="empty-state">Appuie sur le cœur d'un message pour l'ajouter ici.</div>`;
+  container.innerHTML = favs.length ? favs.map((m) => messageRowHTML(m)).join("") : `<div class="empty-state">${t("favorites.empty")}</div>`;
   bindMessageRows(container);
 }
 
@@ -564,10 +697,10 @@ function renderProfile() {
   const lang = localStorage.getItem(LS.language) || "fr";
   const langObj = LANGUAGES.find((l) => l.code === lang);
   document.getElementById("profileLanguageValue").textContent = langObj ? langObj.label : "Français";
-  if (!document.getElementById("profileSince").textContent) document.getElementById("profileSince").textContent = `Membre depuis ${new Date().getFullYear()}`;
+  if (!document.getElementById("profileSince").textContent) document.getElementById("profileSince").textContent = t("profile.memberSince", { year: new Date().getFullYear() });
   const hist = getHistory().map(getMessageById).filter(Boolean);
   const container = document.getElementById("historyList");
-  container.innerHTML = hist.length ? hist.map((m) => messageRowHTML(m)).join("") : `<div class="empty-state">Aucune écoute récente.</div>`;
+  container.innerHTML = hist.length ? hist.map((m) => messageRowHTML(m)).join("") : `<div class="empty-state">${t("profile.noHistory")}</div>`;
   bindMessageRows(container);
 }
 
@@ -595,23 +728,14 @@ function refreshToggleButtons() {
     if (el) el.innerHTML = (scheme === "dusk" ? ICONS.moon : ICONS.sun) + `<span>${label}</span>`;
   });
 }
-function computeAutoScheme(lat, lng) {
-  try {
-    const times = SunCalc.getTimes(new Date(), lat, lng);
-    const now = new Date();
-    return now >= times.sunrise && now < times.sunset ? "matin" : "dusk";
-  } catch { const h = new Date().getHours(); return h >= 7 && h < 20 ? "matin" : "dusk"; }
+function computeAutoScheme() {
+  const h = new Date().getHours();
+  return h >= 7 && h < 20 ? "matin" : "dusk";
 }
 function refreshTheme() {
   const mode = localStorage.getItem(LS.theme) || "auto";
   if (mode !== "auto") { applyScheme(mode === "dusk" ? "dusk" : "matin"); return; }
-  if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => applyScheme(computeAutoScheme(pos.coords.latitude, pos.coords.longitude)),
-      () => applyScheme(computeAutoScheme(null, null)),
-      { timeout: 5000, maximumAge: 15 * 60 * 1000 }
-    );
-  } else applyScheme(computeAutoScheme(null, null));
+  applyScheme(computeAutoScheme());
 }
 function setupThemeToggle(btnId) {
   const btn = document.getElementById(btnId);
@@ -633,6 +757,7 @@ const RENDERERS = {
 };
 
 function init() {
+  applyStaticTranslations();
   refreshTheme();
   setupThemeToggle("themeToggle");
   setupThemeToggle("themeToggle2");
@@ -646,6 +771,7 @@ function init() {
   });
   document.getElementById("btnLanguageContinue").addEventListener("click", () => {
     localStorage.setItem(LS.language, state.selectedOnboardingLang);
+    applyLanguage();
     if (state.languageReturnView === "profile") {
       resetToTab("profile");
     } else {
@@ -723,6 +849,10 @@ function setupInstallPrompt() {
 
   if (isInStandaloneMode() || localStorage.getItem("ov:install-dismissed") === "true") return;
 
+  titleEl.textContent = t("install.title");
+  bodyEl.textContent = t("install.body");
+  actionBtn.textContent = t("install.action");
+
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredInstallPrompt = e;
@@ -732,9 +862,9 @@ function setupInstallPrompt() {
   if (isIos()) {
     // iOS/Safari : Apple ne permet pas de déclencher l'installation par script.
     // On affiche des instructions claires pour "Sur l'écran d'accueil".
-    titleEl.textContent = "Installer One Voice";
-    bodyEl.textContent = "Appuie sur le bouton Partager de Safari, puis choisis \"Sur l'écran d'accueil\" pour installer One Voice.";
-    actionBtn.textContent = "J'ai compris";
+    titleEl.textContent = t("install.title");
+    bodyEl.textContent = t("install.iosBody");
+    actionBtn.textContent = t("install.gotIt");
     actionBtn.onclick = () => hideInstallPopup(true);
     setTimeout(showInstallPopup, 2000);
   }

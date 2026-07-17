@@ -1,25 +1,17 @@
-# One Voice — PWA (identité Signature bleue)
+# One Voice — PWA
 
-## Ce qui a changé dans cette version
+## Corrections de cette session
 
-**Nouvelle identité visuelle** appliquée à l'app fonctionnelle complète (celle avec l'intégration API YouTube) :
-- Bleu dominant (`#0d1526` en mode Nuit, `#f4f7fc` en mode Jour), accent dégradé or/bleu clair
-- Typographie Sora (titres) + Inter (texte courant)
-- Ton logo (`assets/logo-1v.png`) intégré : écran de choix de langue, barre latérale desktop, icônes d'app/PWA
+**Onboarding centré** : l'écran de choix de langue était collé en haut au lieu d'être centré verticalement — corrigé (`justify-content:center` sur toute la hauteur d'écran).
 
-**Structure** :
-- Nav du bas : Accueil, Recherche, **Favoris**, Profil (déjà en place, confirmé)
-- Profil contient : Mes playlists, Langue de l'application, **À propos** (nouveau, écran dédié complet avec texte de mission + liste des fonctionnalités), Historique
-- Fiche prédicateur : nouvelle section **"Séries recommandées par [nom]"** — chaque série affiche une mosaïque de 4 messages, un badge "Choisi par le prédicateur", et le nombre de messages sélectionnés
+**Géolocalisation retirée** : le mode Jour/Nuit automatique utilisait la position GPS pour calculer le vrai lever/coucher du soleil. Ça demandait une permission intrusive au premier lancement. Remplacé par une simple règle horaire (7h–20h = Jour), sans aucune permission demandée. Le bouton manuel Jour/Nuit fonctionne toujours pareil.
 
-## Récupération des messages YouTube (rappel)
-Rien n'a changé ici — toujours les deux options :
-- `recuperer-messages.html` : ouvre-le dans ton navigateur, colle ta clé API, télécharge `messages.json`, dépose-le à la racine, redéploie
-- `scripts/backfill.mjs` : la même chose en ligne de commande
+**Traduction complète FR/EN** : toute l'interface (navigation, titres de section, boutons, états vides, écran À propos, pop-up d'installation, texte de partage, etc.) change réellement de langue selon le choix fait à l'onboarding ou dans Profil. Plus aucun texte ne reste figé en français quand on choisit l'anglais. Les thèmes (Foi, Prière, etc.) sont aussi traduits à l'affichage tout en gardant la même donnée en interne (le filtrage n'est pas cassé).
 
-Voir le reste de cette section dans les versions précédentes du projet si besoin — la mécanique n'a pas bougé.
+**Coupure de contenu à 1 an** : `CONTENT_CUTOFF` dans `data.js` est maintenant au 17 juillet 2025 (au lieu du 1er janvier 2026), comme demandé. Le script de récupération (`recuperer-messages.html`) et `scripts/backfill.mjs` ont aussi leur date par défaut alignée.
 
-## Déploiement demain
-Glisse le **contenu** de ce dossier sur [app.netlify.com/drop](https://app.netlify.com/drop) — vérifie que `index.html` est à la racine de ce que tu déposes, pas dans un sous-dossier.
+## Rappel : générer le vrai contenu
+Le contenu affiché reste celui de `data.js` (provisoire) tant que tu n'as pas lancé `recuperer-messages.html` avec ta clé API pour générer `messages.json`. Une fois ce fichier déposé à la racine et l'app redéployée, le contenu réel et complet prend le relais.
 
-Si tu veux l'ingestion automatique quotidienne (fonction planifiée), il faudra passer par un déploiement Git plutôt que le glisser-déposer — voir les explications précédentes, rien n'a changé sur ce point non plus.
+## Déploiement
+Identique à avant : glisse le contenu du dossier sur Netlify (drag-and-drop) pour l'app de base, ou connecte via Git si tu veux l'ingestion quotidienne automatique (variable d'environnement `YOUTUBE_API_KEY` à ajouter dans Netlify dans ce cas).

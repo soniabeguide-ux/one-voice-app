@@ -5,8 +5,8 @@
 // ============================================================
 
 // Date à partir de laquelle les messages sont considérés comme disponibles
-// dans l'application (1er janvier 2026).
-const CONTENT_CUTOFF = "2026-01-01T00:00:00Z";
+// dans l'application (1 an en arrière).
+const CONTENT_CUTOFF = "2025-07-17T00:00:00Z";
 
 const THEMES = ["Foi", "Couple & Famille", "Finances", "Guérison", "Combat spirituel", "Prière", "Jeunesse"];
 
