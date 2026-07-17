@@ -27,6 +27,7 @@ const I18N = {
     "series.episodes": "Épisodes",
     "player.share": "Partager ce message", "player.favorite": "Favori", "player.playlist": "Playlist",
     "player.mode.video": "Vidéo", "player.mode.audio": "Audio",
+    "player.sleepTimer": "Minuteur", "player.sleepTimerPrompt": "Arrêter la lecture dans combien de minutes ?",
     "player.audioNote": "Mode audio : la vidéo est masquée, seul le son est diffusé. La lecture s'interrompt si l'écran se verrouille (limite YouTube sur mobile).",
     "player.videoNote": "Contenu vidéo YouTube — la lecture s'interrompt si l'écran se verrouille.",
     "player.fromSeries": "Depuis « {name} »",
@@ -83,6 +84,7 @@ const I18N = {
     "series.episodes": "Episodes",
     "player.share": "Share this message", "player.favorite": "Favorite", "player.playlist": "Playlist",
     "player.mode.video": "Video", "player.mode.audio": "Audio",
+    "player.sleepTimer": "Timer", "player.sleepTimerPrompt": "Stop playback after how many minutes?",
     "player.audioNote": "Audio mode: the video is hidden, only the sound plays. Playback stops if the screen locks (YouTube limitation on mobile).",
     "player.videoNote": "YouTube video content — playback stops if the screen locks.",
     "player.fromSeries": "From \"{name}\"",
@@ -156,6 +158,7 @@ const ICONS = {
   moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>`,
   video: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg>`,
   headphones: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="14" width="5" height="7" rx="1.5"/><rect x="17" y="14" width="5" height="7" rx="1.5"/></svg>`,
+  clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`,
   whatsapp: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1s-.7 1-.9 1.1c-.2.1-.3.2-.6 0-.3-.1-1.2-.4-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.4.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.1.2 2.1 3.2 5.1 4.4.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.1-.3-.2-.5-.3z"/><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2z"/></svg>`,
   facebook: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.2-1.5 1.6-1.5h1.7V3.7C15.9 3.6 14.9 3.5 13.7 3.5c-2.5 0-4.2 1.5-4.2 4.3v2.1H6.8v3.1h2.7v8h4z"/></svg>`,
   xTwitter: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 10.4L20.3 3h-1.6l-5.8 6.4L8.3 3H3l7 9.9L3 21h1.6l6.1-6.8L15.7 21H21l-7.4-10.6zm-2.2 2.4l-.7-1L5 4.2h2.4l4.5 6.4.7 1 5.9 8.3h-2.4l-4.7-6.5z"/></svg>`,
@@ -175,6 +178,8 @@ const state = {
   sortMode: "recent", // 'recent' | 'recommended'
   currentMessage: null,
   playerMode: "video",
+  sleepTimerId: null,
+  sleepTimerEndsAt: null,
   languageReturnView: "home",
   selectedOnboardingLang: null,
   playlistDraftSelection: new Set(),
@@ -205,6 +210,23 @@ function initials(name) {
     .split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 }
 function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str || ""; return d.innerHTML; }
+// Certains prédicateurs écrivent leurs titres YouTube tout en majuscules.
+// On ne reformate que les titres majoritairement en capitales (>60% des lettres) —
+// les titres déjà bien casés (comme ceux saisis à la main dans data.js) restent inchangés.
+const KNOWN_ACRONYMS = ["NSPPD", "ICC", "CIE", "MIA", "TV", "VIP", "USA", "UK", "CIC"];
+function formatTitle(str) {
+  if (!str) return str;
+  const letters = str.replace(/[^a-zA-ZÀ-ÿ]/g, "");
+  const upperCount = (letters.match(/[A-ZÀ-Þ]/g) || []).length;
+  if (letters.length === 0 || upperCount / letters.length < 0.6) return str;
+
+  let result = str.toLowerCase();
+  result = result.replace(/(^\s*\p{L}|[.!?:]\s+\p{L})/gu, (m) => m.toUpperCase());
+  KNOWN_ACRONYMS.forEach((ac) => {
+    result = result.replace(new RegExp(`\\b${ac.toLowerCase()}\\b`, "gi"), ac);
+  });
+  return result;
+}
 function computeGreeting() {
   const h = new Date().getHours();
   if (h < 12) return t("greeting.morning");
@@ -236,6 +258,26 @@ function recordHistory(messageId) {
   let h = getHistory().filter((id) => id !== messageId);
   h.unshift(messageId);
   writeJSON(LS.history, h.slice(0, 30));
+}
+
+// --- Reprise de lecture : position en secondes par message ---
+const LS_POSITIONS = "ov:positions";
+function getSavedPosition(messageId) {
+  const positions = readJSON(LS_POSITIONS, {});
+  return positions[messageId] || 0;
+}
+function savePosition(messageId, seconds) {
+  const positions = readJSON(LS_POSITIONS, {});
+  positions[messageId] = Math.floor(seconds);
+  // Garde uniquement les 50 positions les plus récentes pour ne pas grossir indéfiniment
+  const keys = Object.keys(positions);
+  if (keys.length > 50) delete positions[keys[0]];
+  writeJSON(LS_POSITIONS, positions);
+}
+function clearPosition(messageId) {
+  const positions = readJSON(LS_POSITIONS, {});
+  delete positions[messageId];
+  writeJSON(LS_POSITIONS, positions);
 }
 
 // --- Recommandation : score les messages selon les thèmes et prédicateurs
@@ -315,7 +357,7 @@ function renderHome() {
       <img src="${thumbUrl(featured.videoId)}" alt="" />
       <div class="scrim">
         <span class="tag-pill">${escapeHtml(featured.theme)}</span>
-        <div class="title">${escapeHtml(featured.title)}</div>
+        <div class="title">${escapeHtml(formatTitle(featured.title))}</div>
         <div class="meta">${escapeHtml(fp.name)} · ${formatMessageDate(featured.publishedAt)}</div>
       </div>
     </div>`;
@@ -325,7 +367,7 @@ function renderHome() {
     const p = getPreacher(m.preacherId);
     return `<div class="rail-item" data-mid="${m.id}">
       <img src="${thumbUrl(m.videoId)}" alt="" loading="lazy" />
-      <div class="title">${escapeHtml(m.title)}</div>
+      <div class="title">${escapeHtml(formatTitle(m.title))}</div>
       <div class="preacher">${escapeHtml(p.name)}</div>
       <div class="date">${formatMessageDate(m.publishedAt)}</div>
     </div>`;
@@ -469,7 +511,7 @@ function messageRowHTML(m, { checkbox = false } = {}) {
     ${checkbox ? `<div class="checkbox" data-check="${m.id}"></div>` : ""}
     <img class="thumb" src="${thumbUrl(m.videoId)}" alt="" loading="lazy" />
     <div class="info">
-      <div class="title">${escapeHtml(m.title)}</div>
+      <div class="title">${escapeHtml(formatTitle(m.title))}</div>
       <div class="meta">${escapeHtml(p.name)} · ${escapeHtml(themeLabel(m.theme))}</div>
       <div class="date">${formatMessageDate(m.publishedAt)}</div>
     </div>
@@ -557,7 +599,7 @@ function renderPlayer() {
   if (!m) return;
   const p = getPreacher(m.preacherId);
 
-  document.getElementById("playerTitle").textContent = m.title;
+  document.getElementById("playerTitle").textContent = formatTitle(m.title);
   document.getElementById("playerTitle").onclick = () => openPreacher(m.preacherId);
   document.getElementById("playerPreacher").textContent = p.name;
   document.getElementById("playerPreacher").onclick = () => openPreacher(m.preacherId);
@@ -573,6 +615,9 @@ function renderPlayer() {
   const plBtn = document.getElementById("playerAddPlaylist");
   plBtn.innerHTML = ICONS.playlist + `<span>${t("player.playlist")}</span>`;
   plBtn.onclick = () => quickAddToPlaylist(m.id);
+
+  refreshSleepTimerButton();
+  document.getElementById("playerSleepTimer").onclick = openSleepTimerMenu;
 
   const modeToggle = document.getElementById("modeToggle");
   modeToggle.innerHTML = `
@@ -619,6 +664,11 @@ function renderPlayer() {
 
   function startPlayback() {
     recordHistory(m.id);
+    // Reprend là où l'utilisateur s'était arrêté (sauf si déjà proche de la fin)
+    const saved = getSavedPosition(m.id);
+    if (saved > 5 && ytPlayer.getDuration && ytPlayer.getDuration() - saved > 10) {
+      ytPlayer.seekTo(saved, true);
+    }
     if (progressInterval) clearInterval(progressInterval);
     progressInterval = setInterval(() => {
       if (!ytPlayer || typeof ytPlayer.getDuration !== "function") return;
@@ -629,6 +679,10 @@ function renderPlayer() {
       document.getElementById("playPause").innerHTML = ytPlayer.getPlayerState() === 1
         ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
         : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>';
+      // Sauvegarde la position toutes les ~5s (10 x l'intervalle de 500ms) pour la reprise de lecture
+      if (Math.floor(cur) % 5 === 0) {
+        if (dur && cur >= dur - 10) clearPosition(m.id); else savePosition(m.id, cur);
+      }
     }, 500);
   }
 
@@ -644,6 +698,41 @@ function renderPlayer() {
     ytPlayer.loadVideoById(m.videoId);
     startPlayback();
   }
+}
+
+function refreshSleepTimerButton() {
+  const btn = document.getElementById("playerSleepTimer");
+  const active = state.sleepTimerId !== null;
+  btn.classList.toggle("active", active);
+  const label = active ? `${Math.max(0, Math.ceil((state.sleepTimerEndsAt - Date.now()) / 60000))} min` : t("player.sleepTimer");
+  btn.innerHTML = ICONS.clock + `<span>${label}</span>`;
+}
+function openSleepTimerMenu() {
+  if (state.sleepTimerId !== null) {
+    clearSleepTimer();
+    return;
+  }
+  const choice = prompt(t("player.sleepTimerPrompt"));
+  const minutes = parseInt(choice, 10);
+  if (!minutes || minutes <= 0) return;
+  startSleepTimer(minutes);
+}
+function startSleepTimer(minutes) {
+  clearSleepTimer();
+  state.sleepTimerEndsAt = Date.now() + minutes * 60000;
+  state.sleepTimerId = setTimeout(() => {
+    if (ytPlayer) ytPlayer.pauseVideo();
+    state.sleepTimerId = null;
+    state.sleepTimerEndsAt = null;
+    refreshSleepTimerButton();
+  }, minutes * 60000);
+  refreshSleepTimerButton();
+}
+function clearSleepTimer() {
+  if (state.sleepTimerId) clearTimeout(state.sleepTimerId);
+  state.sleepTimerId = null;
+  state.sleepTimerEndsAt = null;
+  refreshSleepTimerButton();
 }
 
 function applyPlayerMode() {
@@ -672,11 +761,16 @@ function quickAddToPlaylist(messageId) {
 
 function shareUrlFor(message) {
   const url = new URL(window.location.href);
-  url.search = `?m=${message.id}`;
+  const params = { m: message.id };
+  if (ytPlayer && typeof ytPlayer.getCurrentTime === "function") {
+    const cur = Math.floor(ytPlayer.getCurrentTime());
+    if (cur > 5) params.t = cur;
+  }
+  url.search = new URLSearchParams(params).toString();
   return url.toString();
 }
 function shareTextFor(message, preacher) {
-  return t("share.text", { title: message.title, preacher: preacher.name });
+  return t("share.text", { title: formatTitle(message.title), preacher: preacher.name });
 }
 function renderShareRow(message, preacher) {
   const url = shareUrlFor(message);
@@ -721,7 +815,7 @@ function renderSeries() {
   document.getElementById("seriesEpisodes").innerHTML = episodes.map((ep, i) => `
     <div class="episode-row" data-mid="${ep.id}">
       <div class="ep-number">E${ep.episodeNumber || i + 1}</div>
-      <div class="info"><div class="title">${escapeHtml(ep.title)}</div><div class="date">${formatMessageDate(ep.publishedAt)}</div></div>
+      <div class="info"><div class="title">${escapeHtml(formatTitle(ep.title))}</div><div class="date">${formatMessageDate(ep.publishedAt)}</div></div>
     </div>`).join("");
   document.querySelectorAll("#seriesEpisodes .episode-row").forEach((el) => el.addEventListener("click", () => openPlayer(getMessageById(el.dataset.mid))));
 }
@@ -940,6 +1034,8 @@ function init() {
   const params = new URLSearchParams(window.location.search);
   const sharedId = params.get("m");
   const sharedMessage = sharedId && getMessageById(sharedId);
+  const sharedTimestamp = params.get("t") ? parseInt(params.get("t"), 10) : null;
+  if (sharedMessage && sharedTimestamp) savePosition(sharedMessage.id, sharedTimestamp);
   const hasLanguage = !!localStorage.getItem(LS.language);
   const hasOnboarded = localStorage.getItem(LS.onboarded) === "true";
 
