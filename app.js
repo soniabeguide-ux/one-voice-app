@@ -182,11 +182,13 @@ const state = {
 
 const MIN_SERMON_SECONDS = 30 * 60;
 // Filet de sécurité côté app : une prédication doit durer au moins 30 min
-// ET ne pas être classée "louange", peu importe ce que dit le contenu stocké.
-// Les entrées historiques sans durée connue (data.js provisoire) restent acceptées.
+// ET ne pas être classée "louange". Si la durée est inconnue, le message
+// est exclu par prudence plutôt que laissé passer par défaut — sinon un
+// messages.json généré sans durée (ancienne version de l'outil, ou échec
+// silencieux de récupération) contournerait complètement le filtre.
 function isSermon(m) {
   if (m.contentType === "louange") return false;
-  if (m.durationSeconds === undefined || m.durationSeconds === null) return true;
+  if (typeof m.durationSeconds !== "number" || m.durationSeconds <= 0) return false;
   return m.durationSeconds >= MIN_SERMON_SECONDS;
 }
 
