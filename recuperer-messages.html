@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>One Voice — Récupérer les messages YouTube</title>
+<style>
+  :root{ --bg:#0f2419; --surface:#17331f; --text:#f1f3ec; --muted:#9db3a0; --accent:#63c47f; --border:rgba(241,243,236,.12); }
+  *{box-sizing:border-box}
+  body{ background:var(--bg); color:var(--text); font-family:-apple-system,Segoe UI,Inter,sans-serif; max-width:720px; margin:0 auto; padding:32px 20px 80px; line-height:1.5; }
+  h1{ font-size:24px; margin-bottom:4px }
+  .subtitle{ color:var(--muted); font-size:14px; margin-bottom:28px }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:20px }
+  label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:600 }
+  input[type=text], input[type=password], input[type=date]{
+    width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text);
+    padding:11px 12px; font-size:15px; margin-bottom:16px;
+  }
+  .row{ display:flex; align-items:center; gap:8px; margin-bottom:16px; font-size:13px; color:var(--muted) }
+  .row input[type=checkbox]{ width:16px; height:16px; margin:0 }
+  button{
+    background:var(--accent); color:#0c2013; border:none; border-radius:10px; padding:13px 22px;
+    font-size:15px; font-weight:700; cursor:pointer; width:100%;
+  }
+  button:disabled{ background:#2a3f30; color:var(--muted); cursor:not-allowed }
+  button.secondary{ background:transparent; border:1px solid var(--accent); color:var(--accent); margin-top:10px }
+  .warn{ background:rgba(217,138,61,.12); border:1px solid rgba(217,138,61,.4); border-radius:10px; padding:12px 14px; font-size:13px; color:#e8c99a; margin-bottom:20px }
+  #log{ font-family:ui-monospace,Menlo,monospace; font-size:13px; white-space:pre-wrap; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px; max-height:340px; overflow-y:auto; margin-top:16px; display:none }
+  .line-ok{ color:var(--accent) }
+  .line-err{ color:#e8848a }
+  .line-warn{ color:#e8c99a }
+  #result{ display:none; text-align:center; padding:20px 0 0 }
+  #result .count{ font-size:32px; font-weight:700; color:var(--accent) }
+  #result .label{ color:var(--muted); font-size:13px }
+  #progress{ height:6px; background:var(--bg); border-radius:3px; overflow:hidden; margin-top:16px; display:none }
+  #progressFill{ height:100%; background:var(--accent); width:0%; transition:width .3s }
+</style>
+</head>
+<body>
+  <h1>Récupérer les messages YouTube</h1>
+  <div class="subtitle">Aucune installation, aucun terminal — tout se passe dans cette page.</div>
+
+  <div class="warn">
+    ⚠️ Cette clé reste uniquement dans ton navigateur (elle n'est envoyée qu'à Google).
+    Ne mets pas cette page en ligne publiquement avec ta clé enregistrée, et ne partage jamais
+    cette clé par message.
+  </div>
+
+  <div class="card">
+    <label for="apiKey">Clé API YouTube</label>
+    <input type="password" id="apiKey" placeholder="AIzaSy..." autocomplete="off" />
+
+    <div class="row">
+      <input type="checkbox" id="remember" />
+      <label for="remember" style="margin:0">Se souvenir de la clé sur cet appareil</label>
+    </div>
+
+    <label for="cutoff">Récupérer les messages depuis le</label>
+    <input type="date" id="cutoff" value="2026-01-01" />
+
+    <button id="startBtn">Lancer la récupération</button>
+    <div id="progress"><div id="progressFill"></div></div>
+    <div id="log"></div>
+  </div>
+
+  <div class="card" id="result">
+    <div class="count" id="resultCount">0</div>
+    <div class="label">messages récupérés, prêts à télécharger</div>
+    <button id="downloadBtn">Télécharger messages.json</button>
+    <button class="secondary" id="restartBtn">Relancer une récupération</button>
+  </div>
+
+  <script>
+    // Liste des prédicateurs — garde-la synchronisée avec data.js si tu en ajoutes un.
+    const PREACHERS = [
+      { id: "raoul-wafo", name: "Dr Raoul Wafo", channelUrl: "https://www.youtube.com/@TempledelaFoiTV" },
+      { id: "mamadou-karambiri", name: "Dr Mamadou Philippe Karambiri", channelUrl: "https://www.youtube.com/@rmcimpactv" },
+      { id: "yvan-castanou", name: "Apôtre Yvan Castanou", channelUrl: "https://www.youtube.com/c/YvanCASTANOUTV" },
+      { id: "yves-castanou", name: "Apôtre Yves Castanou", channelUrl: "https://www.youtube.com/@yves.castanou" },
+      { id: "mohammed-sanogo", name: "Apôtre Mohammed Sanogo", channelUrl: "https://www.youtube.com/@MohammedSANOGO" },
+      { id: "chris-ndikumana", name: "Évangéliste Chris Ndikumana", channelUrl: "https://www.youtube.com/@chrisndikumana" },
+      { id: "joshua-selman", name: "Apostle Joshua Selman", channelUrl: "https://www.youtube.com/c/KoinoniaGlobal" },
+      { id: "jerry-eze", name: "Pastor Jerry Eze", channelUrl: "https://www.youtube.com/channel/UCLg4NCAJxhIvD4IRV__LOFg" },
+      { id: "eno-jerry", name: "Pastor Dr Eno Jerry Eze", channelUrl: "https://www.youtube.com/@enojerry22" },
+    ];
+
+    const THEME_KEYWORDS = {
+      "Prière": ["prière", "prières", "prier", "jeûne", "jeune", "intercession", "prayer", "prayers", "nsppd", "veillée", "consécration"],
+      "Combat spirituel": ["combat", "délivrance", "delivrance", "satan", "démon", "demon", "warfare", "spirituel", "ennemi", "victoire"],
+      "Guérison": ["guérison", "guerison", "miracle", "miracles", "healing", "santé", "restaurer", "restauration"],
+      "Couple & Famille": ["couple", "mariage", "famille", "époux", "epoux", "femme", "mari", "marriage", "family", "relationship"],
+      "Finances": ["finance", "finances", "argent", "prospérité", "prosperite", "richesse", "business", "money", "abondance"],
+      "Jeunesse": ["jeune", "jeunesse", "génération", "generation", "youth", "étudiant", "destinée", "vision"],
+      "Foi": ["foi", "faith", "croire", "confiance", "parole", "grâce", "grace"],
+    };
+    function guessTheme(title) {
+      const t = title.toLowerCase();
+      for (const [theme, words] of Object.entries(THEME_KEYWORDS)) {
+        if (words.some((w) => t.includes(w))) return theme;
+      }
+      return "Foi";
+    }
+
+    const API = "https://www.googleapis.com/youtube/v3";
+    async function apiGet(endpoint, params, key) {
+      const url = new URL(`${API}/${endpoint}`);
+      Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+      url.searchParams.set("key", key);
+      const res = await fetch(url);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error?.message || `HTTP ${res.status}`);
+      return json;
+    }
+
+    // Résout le channelId : URL directe /channel/UC..., sinon @handle via l'API,
+    // sinon recherche par nom (fonctionne aussi pour les anciennes URL /c/vanity).
+    async function resolveChannelId(preacher, key) {
+      const direct = preacher.channelUrl.match(/\/channel\/(UC[\w-]+)/);
+      if (direct) return direct[1];
+
+      const handle = preacher.channelUrl.match(/\/@([\w.-]+)/);
+      if (handle) {
+        try {
+          const d = await apiGet("channels", { part: "id", forHandle: "@" + handle[1] }, key);
+          if (d.items?.[0]?.id) return d.items[0].id;
+        } catch {}
+      }
+
+      // Repli universel : recherche par nom de chaîne/prédicateur
+      const query = handle ? handle[1] : preacher.name;
+      const d = await apiGet("search", { part: "snippet", type: "channel", q: query, maxResults: 1 }, key);
+      return d.items?.[0]?.snippet?.channelId || d.items?.[0]?.id?.channelId || null;
+    }
+
+    async function getUploadsPlaylistId(channelId, key) {
+      const d = await apiGet("channels", { part: "contentDetails", id: channelId }, key);
+      return d.items?.[0]?.contentDetails?.relatedPlaylists?.uploads || null;
+    }
+
+    async function fetchVideosSince(uploadsPlaylistId, cutoff, key) {
+      const videos = [];
+      let pageToken = "";
+      while (true) {
+        const params = { part: "snippet,contentDetails", playlistId: uploadsPlaylistId, maxResults: 50 };
+        if (pageToken) params.pageToken = pageToken;
+        const d = await apiGet("playlistItems", params, key);
+
+        let reachedOlder = false;
+        for (const item of d.items || []) {
+          const publishedAt = item.contentDetails?.videoPublishedAt || item.snippet?.publishedAt;
+          if (!publishedAt) continue;
+          if (new Date(publishedAt) < cutoff) { reachedOlder = true; continue; }
+          const title = item.snippet?.title || "";
+          if (title === "Deleted video" || title === "Private video") continue;
+          videos.push({ videoId: item.contentDetails.videoId, title, publishedAt });
+        }
+        pageToken = d.nextPageToken;
+        if (!pageToken || reachedOlder) break;
+      }
+      return videos;
+    }
+
+    // --- UI ---
+    const apiKeyInput = document.getElementById("apiKey");
+    const rememberBox = document.getElementById("remember");
+    const cutoffInput = document.getElementById("cutoff");
+    const startBtn = document.getElementById("startBtn");
+    const logEl = document.getElementById("log");
+    const progressEl = document.getElementById("progress");
+    const progressFill = document.getElementById("progressFill");
+    const resultEl = document.getElementById("result");
+    const resultCount = document.getElementById("resultCount");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    const savedKey = localStorage.getItem("ov-yt-key");
+    if (savedKey) { apiKeyInput.value = savedKey; rememberBox.checked = true; }
+
+    function log(text, cls) {
+      logEl.style.display = "block";
+      const line = document.createElement("div");
+      if (cls) line.className = cls;
+      line.textContent = text;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    let lastMessages = [];
+
+    startBtn.addEventListener("click", async () => {
+      const key = apiKeyInput.value.trim();
+      if (!key) { alert("Colle ta clé API YouTube d'abord."); return; }
+      const cutoff = new Date(cutoffInput.value);
+
+      rememberBox.checked ? localStorage.setItem("ov-yt-key", key) : localStorage.removeItem("ov-yt-key");
+
+      startBtn.disabled = true;
+      startBtn.textContent = "Récupération en cours…";
+      logEl.innerHTML = "";
+      progressEl.style.display = "block";
+      resultEl.style.display = "none";
+
+      const allMessages = [];
+      let done = 0;
+
+      for (const preacher of PREACHERS) {
+        try {
+          const channelId = await resolveChannelId(preacher, key);
+          if (!channelId) { log(`⚠️  ${preacher.name} — chaîne introuvable`, "line-warn"); done++; updateProgress(done); continue; }
+
+          const uploads = await getUploadsPlaylistId(channelId, key);
+          if (!uploads) { log(`⚠️  ${preacher.name} — playlist introuvable`, "line-warn"); done++; updateProgress(done); continue; }
+
+          const videos = await fetchVideosSince(uploads, cutoff, key);
+          videos.forEach((v) => {
+            allMessages.push({
+              id: `m-${preacher.id}-${v.videoId}`,
+              preacherId: preacher.id,
+              videoId: v.videoId,
+              title: v.title,
+              theme: guessTheme(v.title),
+              publishedAt: v.publishedAt,
+            });
+          });
+          log(`✅ ${preacher.name} — ${videos.length} vidéo(s)`, "line-ok");
+        } catch (err) {
+          log(`❌ ${preacher.name} — ${err.message}`, "line-err");
+        }
+        done++;
+        updateProgress(done);
+      }
+
+      allMessages.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+      lastMessages = allMessages;
+
+      log(`\n✨ Terminé : ${allMessages.length} messages au total.`, "line-ok");
+      startBtn.disabled = false;
+      startBtn.textContent = "Lancer la récupération";
+      resultCount.textContent = allMessages.length;
+      resultEl.style.display = "block";
+    });
+
+    function updateProgress(done) {
+      progressFill.style.width = `${Math.round((done / PREACHERS.length) * 100)}%`;
+    }
+
+    downloadBtn.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(lastMessages, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "messages.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    restartBtn.addEventListener("click", () => {
+      resultEl.style.display = "none";
+      logEl.style.display = "none";
+      progressEl.style.display = "none";
+      progressFill.style.width = "0%";
+    });
+  </script>
+</body>
+</html>
