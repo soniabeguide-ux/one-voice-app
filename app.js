@@ -375,7 +375,7 @@ function runSearch() {
     });
   }
   // Ordre chronologique (du plus ancien au plus récent), comme demandé
-  results.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+  results.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
   document.getElementById("searchResultsTitle").textContent = t("search.results", { n: results.length });
   document.getElementById("searchResults").innerHTML = results.map((m) => messageRowHTML(m)).join("") || `<div class="empty-state">${t("search.noResults")}</div>`;
@@ -448,7 +448,7 @@ function renderPreacher() {
 
   const available = p.messages.filter((m) => new Date(m.publishedAt) >= new Date(CONTENT_CUTOFF));
   document.getElementById("preacherMessagesTitle").textContent = t("preacher.messages", { n: available.length });
-  const sorted = [...available].sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
+  const sorted = [...available].sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
   const container = document.getElementById("preacherMessages");
   container.innerHTML = sorted.length
     ? sorted.map((m) => messageRowHTML({ ...m, preacherId: p.id })).join("")
