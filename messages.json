@@ -34540,13 +34540,33 @@
     "contentType": "autre"
   },
   {
+    "id": "m-mamadou-karambiri-SsUw5lD3PFM",
+    "preacherId": "mamadou-karambiri",
+    "videoId": "SsUw5lD3PFM",
+    "title": "PAROLES DE SAGESSE I EVANGELISTE ALIZETA KAMBOU",
+    "theme": "Foi",
+    "publishedAt": "2026-07-17T22:10:44Z",
+    "durationSeconds": 21,
+    "contentType": "autre"
+  },
+  {
+    "id": "m-mohammed-sanogo-AJNOJ2bSuos",
+    "preacherId": "mohammed-sanogo",
+    "videoId": "AJNOJ2bSuos",
+    "title": "APRÈS UN AVC, IL RETROUVE SES FORCES PENDANT LA LOUANGE",
+    "theme": "Foi",
+    "publishedAt": "2026-07-17T22:52:37Z",
+    "durationSeconds": 119,
+    "contentType": "louange"
+  },
+  {
     "id": "m-mohammed-sanogo-B-VzykFKlSo",
     "preacherId": "mohammed-sanogo",
     "videoId": "B-VzykFKlSo",
     "title": "CROISADE D'ÉVANGÉLISATION À THIÈS, SÉNÉGAL - 2e SOIRÉE - MOHAMMED SANOGO",
     "theme": "Foi",
-    "publishedAt": "2026-07-17T20:50:53Z",
-    "durationSeconds": 0,
-    "contentType": "autre"
+    "publishedAt": "2026-07-17T23:30:58Z",
+    "durationSeconds": 9045,
+    "contentType": "predication"
   }
 ]

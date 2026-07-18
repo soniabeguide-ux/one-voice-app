@@ -13,6 +13,23 @@ const THEMES = ["Foi", "Couple & Famille", "Finances", "Guérison", "Combat spir
 const PREACHERS = [
   // --- FRANCOPHONES ---
   {
+    id: "mamadou-karambiri",
+    name: "Dr Mamadou Philippe Karambiri",
+    ministry: "CIE / Impact Centre Chrétien",
+    country: "Burkina Faso",
+    language: "fr",
+    channelUrl: "https://www.youtube.com/@rmcimpactv",
+    channelName: "RMC Impact TV",
+    bio: "Pasteur du Centre International d'Évangélisation (CIE/MIA), enseignant biblique reconnu pour ses messages multilingues (français/mooré) sur la foi et la direction divine.",
+    messages: [
+      { id: "m-karambiri-1", videoId: "qQSkaWO2xOA", title: "La leçon de la foi enseignée par Jésus", theme: "Foi", publishedAt: "2025-10-12", durationSeconds: 2700, contentType: "predication" },
+      { id: "m-karambiri-2", videoId: "Rqxv82SdZII", title: "Enseignement du 25/01/2023", theme: "Foi", publishedAt: "2023-01-25", durationSeconds: 2700, contentType: "predication" },
+      { id: "m-karambiri-3", videoId: "9Vd5EBPUTe4", title: "La foi courageuse du conquérant vainqueur", theme: "Foi", publishedAt: "2023-12-24", durationSeconds: 2700, contentType: "predication" },
+      { id: "m-karambiri-4", videoId: "RU9mnRKjHvc", title: "La vision / destinée", theme: "Jeunesse", publishedAt: "2023-12-20", durationSeconds: 2700, contentType: "predication" },
+      { id: "m-karambiri-5", videoId: "VWm_4z0SnOI", title: "Seigneur, étends mes limites", theme: "Prière", publishedAt: "2024-06-16", durationSeconds: 2700, contentType: "predication" },
+    ],
+  },
+  {
     id: "raoul-wafo",
     name: "Dr Raoul Wafo",
     ministry: "Temple de la Foi",
@@ -29,23 +46,6 @@ const PREACHERS = [
       { id: "m-wafo-3", videoId: "49YPGGHAW_Q", title: "Comprendre le monde spirituel (1ère partie)", theme: "Combat spirituel", publishedAt: "2025-10-04", seriesId: "s-wafo-monde-spirituel", episodeNumber: 1 },
       { id: "m-wafo-4", videoId: "v_52VuUmh-c", title: "Comment tout obtenir de Dieu par la foi ?", theme: "Foi", publishedAt: "2025-08-30", durationSeconds: 2700, contentType: "predication" },
       { id: "m-wafo-5", videoId: "msRGA4Z5k7w", title: "Expérimenter la bonté de Dieu (1ère partie)", theme: "Foi", publishedAt: "2025-09-25", durationSeconds: 2700, contentType: "predication" },
-    ],
-  },
-  {
-    id: "mamadou-karambiri",
-    name: "Dr Mamadou Philippe Karambiri",
-    ministry: "CIE / Impact Centre Chrétien",
-    country: "Burkina Faso",
-    language: "fr",
-    channelUrl: "https://www.youtube.com/@rmcimpactv",
-    channelName: "RMC Impact TV",
-    bio: "Pasteur du Centre International d'Évangélisation (CIE/MIA), enseignant biblique reconnu pour ses messages multilingues (français/mooré) sur la foi et la direction divine.",
-    messages: [
-      { id: "m-karambiri-1", videoId: "qQSkaWO2xOA", title: "La leçon de la foi enseignée par Jésus", theme: "Foi", publishedAt: "2025-10-12", durationSeconds: 2700, contentType: "predication" },
-      { id: "m-karambiri-2", videoId: "Rqxv82SdZII", title: "Enseignement du 25/01/2023", theme: "Foi", publishedAt: "2023-01-25", durationSeconds: 2700, contentType: "predication" },
-      { id: "m-karambiri-3", videoId: "9Vd5EBPUTe4", title: "La foi courageuse du conquérant vainqueur", theme: "Foi", publishedAt: "2023-12-24", durationSeconds: 2700, contentType: "predication" },
-      { id: "m-karambiri-4", videoId: "RU9mnRKjHvc", title: "La vision / destinée", theme: "Jeunesse", publishedAt: "2023-12-20", durationSeconds: 2700, contentType: "predication" },
-      { id: "m-karambiri-5", videoId: "VWm_4z0SnOI", title: "Seigneur, étends mes limites", theme: "Prière", publishedAt: "2024-06-16", durationSeconds: 2700, contentType: "predication" },
     ],
   },
   {
@@ -169,6 +169,7 @@ const SERIES = [
     title: "Comprendre le monde spirituel",
     theme: "Combat spirituel",
     description: "Une série d'enseignements du Dr Raoul Wafo pour comprendre les réalités du monde spirituel et marcher en victoire.",
+    addedAt: "2026-01-01",
   },
   {
     id: "s-yvan-consecration",
@@ -176,6 +177,7 @@ const SERIES = [
     title: "Consacrons le mois",
     theme: "Prière",
     description: "Les temps mensuels de consécration de l'Apôtre Yvan Castanou pour entrer dans chaque mois avec Dieu.",
+    addedAt: "2026-07-01",
   },
 ];
 

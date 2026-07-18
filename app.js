@@ -3,7 +3,7 @@
 // ============================================================
 const I18N = {
   fr: {
-    "nav.home": "Accueil", "nav.search": "Recherche", "nav.favorites": "Favoris", "nav.profile": "Profil",
+    "nav.home": "Accueil", "nav.search": "Recherche", "nav.live": "Direct", "nav.favorites": "Favoris", "nav.profile": "Profil",
     "lang.title": "Choisis ta langue", "lang.subtitle": "Tu pourras la modifier plus tard dans ton profil.", "lang.continue": "Continuer",
     "onb.kicker": "ONE VOICE", "onb.title": "Jesus at the center",
     "onb.mission": "Parce que Dieu a un seul message mais qu'Il S'est choisi plusieurs voix pour le perfectionnement du corps de Christ, One Voice existe pour rendre ces messages simplement accessibles à tous, chaque jour.",
@@ -11,6 +11,9 @@ const I18N = {
     "greeting.morning": "Bonjour", "greeting.afternoon": "Bon après-midi", "greeting.evening": "Bonsoir",
     "home.searchPlaceholder": "Rechercher un prédicateur, un message…",
     "home.recent": "Récemment ajoutés", "home.explore": "Explorer par thème", "home.series": "Séries en cours",
+    "home.recommendedThisWeek": "Recommandé cette semaine",
+    "home.pathwayVideo": "Vidéo", "home.pathwayAudio": "Audio",
+    "home.audioEmpty": "Le parcours audio arrive bientôt — les enseignements en audio de tes prédicateurs apparaîtront ici.",
     "home.preachers": "Prédicateurs", "home.tabFr": "En Français", "home.tabEn": "En Anglais",
     "home.featured": "À la une", "home.empty": "Aucun message disponible pour le moment.",
     "search.title": "Recherche", "search.placeholder": "Rechercher un message, un prédicateur…",
@@ -38,6 +41,9 @@ const I18N = {
     "playlistCreate.confirm": "Créer la playlist", "playlistCreate.creating": "Création…",
     "playlistDetail.empty": "Playlist vide.",
     "favorites.title": "Favoris", "favorites.empty": "Appuie sur le cœur d'un message pour l'ajouter ici.",
+    "live.title": "Direct", "live.checking": "Vérification des directs en cours…", "live.none": "Personne n'est en direct pour le moment. Reviens plus tard !",
+    "live.error": "Impossible de vérifier les directs pour le moment.", "live.badge": "EN DIRECT",
+    "live.shareText": "🔴 {name} est en direct maintenant sur One Voice — \"{title}\". Rejoins le direct :",
     "profile.you": "Toi", "profile.memberSince": "Membre depuis {year}",
     "profile.favorites": "Favoris", "profile.playlists": "Playlists", "profile.listened": "Écoutés",
     "profile.myPlaylists": "Mes playlists", "profile.language": "Langue de l'application", "profile.appearance": "Apparence", "profile.about": "À propos",
@@ -60,7 +66,7 @@ const I18N = {
     "themes": { "Foi": "Foi", "Couple & Famille": "Couple & Famille", "Finances": "Finances", "Guérison": "Guérison", "Combat spirituel": "Combat spirituel", "Prière": "Prière", "Jeunesse": "Jeunesse" },
   },
   en: {
-    "nav.home": "Home", "nav.search": "Search", "nav.favorites": "Favorites", "nav.profile": "Profile",
+    "nav.home": "Home", "nav.search": "Search", "nav.live": "Live", "nav.favorites": "Favorites", "nav.profile": "Profile",
     "lang.title": "Choose your language", "lang.subtitle": "You can change this later in your profile.", "lang.continue": "Continue",
     "onb.kicker": "ONE VOICE", "onb.title": "Jesus at the center",
     "onb.mission": "Because God has one message but chose several voices for the perfecting of the body of Christ, One Voice exists to make these messages simply accessible to everyone, every day.",
@@ -68,6 +74,9 @@ const I18N = {
     "greeting.morning": "Good morning", "greeting.afternoon": "Good afternoon", "greeting.evening": "Good evening",
     "home.searchPlaceholder": "Search for a preacher, a message…",
     "home.recent": "Recently added", "home.explore": "Explore by theme", "home.series": "Ongoing series",
+    "home.recommendedThisWeek": "Recommended this week",
+    "home.pathwayVideo": "Video", "home.pathwayAudio": "Audio",
+    "home.audioEmpty": "The audio pathway is coming soon — your preachers' audio teachings will appear here.",
     "home.preachers": "Preachers", "home.tabFr": "In French", "home.tabEn": "In English",
     "home.featured": "Featured", "home.empty": "No messages available at the moment.",
     "search.title": "Search", "search.placeholder": "Search for a message, a preacher…",
@@ -95,6 +104,9 @@ const I18N = {
     "playlistCreate.confirm": "Create playlist", "playlistCreate.creating": "Creating…",
     "playlistDetail.empty": "Empty playlist.",
     "favorites.title": "Favorites", "favorites.empty": "Tap the heart on a message to add it here.",
+    "live.title": "Live", "live.checking": "Checking for live streams…", "live.none": "No one is live right now. Check back later!",
+    "live.error": "Couldn't check live streams right now.", "live.badge": "LIVE",
+    "live.shareText": "🔴 {name} is live now on One Voice — \"{title}\". Join the stream:",
     "profile.you": "You", "profile.memberSince": "Member since {year}",
     "profile.favorites": "Favorites", "profile.playlists": "Playlists", "profile.listened": "Listened",
     "profile.myPlaylists": "My playlists", "profile.language": "App language", "profile.appearance": "Appearance", "profile.about": "About",
@@ -164,6 +176,7 @@ const ICONS = {
   xTwitter: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 10.4L20.3 3h-1.6l-5.8 6.4L8.3 3H3l7 9.9L3 21h1.6l6.1-6.8L15.7 21H21l-7.4-10.6zm-2.2 2.4l-.7-1L5 4.2h2.4l4.5 6.4.7 1 5.9 8.3h-2.4l-4.7-6.5z"/></svg>`,
   telegram: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3L18.6 20c-.2 1-.9 1.2-1.7.8l-4.7-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9L18 6.7c.4-.4-.1-.6-.6-.2L6.3 13.3l-4.8-1.5c-1-.3-1-1 .2-1.5L20.6 3.2c.8-.3 1.6.2 1.3 1.1z"/></svg>`,
   link: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2"/></svg>`,
+  shareIcon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-3.9M8.6 13.5l6.8 3.9"/></svg>`,
 };
 
 const state = {
@@ -336,6 +349,18 @@ function resetToTab(name) { state.viewStack = []; showView(name, { push: false }
 
 function renderHome() {
   document.getElementById("greetingText").textContent = computeGreeting();
+  renderPathwayToggle();
+
+  if ((localStorage.getItem("ov:pathway") || "video") === "audio") {
+    document.getElementById("homeFeatured").innerHTML = `<div class="empty-state">${t("home.audioEmpty")}</div>`;
+    document.getElementById("homeRail").innerHTML = "";
+    document.getElementById("homeThemeChips").innerHTML = "";
+    document.getElementById("homeSeriesSpotlight").style.display = "none";
+    document.getElementById("homeSeries").innerHTML = "";
+    document.getElementById("homePreacherList").innerHTML = "";
+    return;
+  }
+
   const msgs = allMessages().sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
   if (msgs.length === 0) {
@@ -379,6 +404,30 @@ function renderHome() {
     state.searchTheme = btn.dataset.theme; state.searchPreacherId = null; navigate("search");
   }));
 
+  // Une seule série recommandée mise en avant (la plus récemment ajoutée) — reste visible
+  // sans ajouter une grille supplémentaire qui alourdirait l'écran.
+  const spotlightSeries = [...SERIES].sort((a, b) => (b.addedAt || "").localeCompare(a.addedAt || ""))[0];
+  const spotlightEl = document.getElementById("homeSeriesSpotlight");
+  if (spotlightSeries) {
+    const sp = getPreacher(spotlightSeries.preacherId);
+    const spEpisodes = getSeriesMessages(spotlightSeries.id);
+    spotlightEl.style.display = "";
+    spotlightEl.innerHTML = `
+      <div class="section-title">${t("home.recommendedThisWeek")}</div>
+      <div class="series-spotlight" data-sid="${spotlightSeries.id}">
+        <img src="${spEpisodes[0] ? thumbUrl(spEpisodes[0].videoId) : ""}" alt="" />
+        <div class="scrim">
+          <span class="badge">${t("series.badge")}</span>
+          <div class="title">${escapeHtml(spotlightSeries.title)}</div>
+          <div class="meta">${escapeHtml(sp.name)} · ${tPlural("series.episodeCount", spEpisodes.length)}</div>
+        </div>
+      </div>`;
+    spotlightEl.querySelector(".series-spotlight").addEventListener("click", () => openSeries(spotlightSeries.id));
+  } else {
+    spotlightEl.style.display = "none";
+    spotlightEl.innerHTML = "";
+  }
+
   document.getElementById("homeSeries").innerHTML = SERIES.map((s) => {
     const p = getPreacher(s.preacherId);
     const episodes = getSeriesMessages(s.id);
@@ -390,6 +439,18 @@ function renderHome() {
   document.querySelectorAll("#homeSeries .series-row").forEach((el) => el.addEventListener("click", () => openSeries(el.dataset.sid)));
 
   renderHomePreacherTabs();
+}
+function renderPathwayToggle() {
+  const el = document.getElementById("pathwayToggle");
+  const pathway = localStorage.getItem("ov:pathway") || "video";
+  el.innerHTML = `
+    <div class="indicator ${pathway === "audio" ? "audio" : ""}"></div>
+    <button class="${pathway === "video" ? "active" : ""}" data-pathway="video">${ICONS.video}${t("home.pathwayVideo")}</button>
+    <button class="${pathway === "audio" ? "active" : ""}" data-pathway="audio">${ICONS.headphones}${t("home.pathwayAudio")}</button>`;
+  el.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => {
+    localStorage.setItem("ov:pathway", btn.dataset.pathway);
+    renderHome();
+  }));
 }
 function renderHomePreacherTabs() {
   document.getElementById("tabFr").classList.toggle("active", state.langTab === "fr");
@@ -862,6 +923,77 @@ function updatePlaylistCreateUI() {
   document.getElementById("btnConfirmCreatePlaylist").disabled = !(name && count > 0);
 }
 
+// ============================================================
+// DIRECT (onglet Live)
+// ============================================================
+function renderLive() {
+  const container = document.getElementById("liveList");
+  container.innerHTML = `<div class="empty-state" id="liveLoading">${t("live.checking")}</div>`;
+
+  fetch("/.netlify/functions/check-live")
+    .then((res) => res.json())
+    .then((data) => {
+      const liveList = Array.isArray(data.live) ? data.live : [];
+      if (liveList.length === 0) {
+        container.innerHTML = `<div class="empty-state">${t("live.none")}</div>`;
+        return;
+      }
+      container.innerHTML = `<div class="live-grid">${liveList.map((l) => {
+        const p = getPreacher(l.preacherId);
+        return `<div class="live-card" data-video="${l.videoId}" data-preacher="${l.preacherId}" data-title="${escapeHtml(l.title)}">
+          <img src="${l.thumbnail || thumbUrl(l.videoId)}" alt="" loading="lazy" />
+          <div class="badge"><span class="dot"></span>${t("live.badge")}</div>
+          <button class="share-live" data-video="${l.videoId}" data-preacher="${l.preacherId}" data-title="${escapeHtml(l.title)}">${ICONS.shareIcon}</button>
+          <div class="info"><div class="name">${escapeHtml(p ? p.name : "")}</div><div class="sub">${escapeHtml(l.title)}</div></div>
+        </div>`;
+      }).join("")}</div>`;
+
+      container.querySelectorAll(".live-card").forEach((card) => {
+        card.addEventListener("click", (e) => {
+          if (e.target.closest(".share-live")) return;
+          openLivePlayer(card.dataset.preacher, card.dataset.video, card.dataset.title);
+        });
+      });
+      container.querySelectorAll(".share-live").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          shareLive(btn.dataset.preacher, btn.dataset.video, btn.dataset.title);
+        });
+      });
+    })
+    .catch(() => {
+      container.innerHTML = `<div class="empty-state">${t("live.error")}</div>`;
+    });
+}
+
+function openLivePlayer(preacherId, videoId, title) {
+  const p = getPreacher(preacherId);
+  state.currentMessage = { id: `live-${videoId}`, preacherId, videoId, title, theme: "Foi", publishedAt: new Date().toISOString(), isLive: true };
+  navigate("player");
+}
+
+async function shareLive(preacherId, videoId, title) {
+  const p = getPreacher(preacherId);
+  const url = new URL(window.location.href);
+  url.search = new URLSearchParams({ live: videoId }).toString();
+  const text = t("live.shareText", { name: p ? p.name : "", title });
+
+  // Sur mobile, le partage natif fait apparaître toutes les apps installées,
+  // y compris les options "Ajouter à une story" quand la plateforme le permet.
+  if (navigator.share) {
+    try { await navigator.share({ title: "One Voice", text, url: url.toString() }); return; } catch { /* annulé par l'utilisateur */ }
+  }
+  // Repli : mêmes boutons que le partage de message (WhatsApp, Facebook, X, Telegram, copier)
+  const links = [
+    { icon: ICONS.whatsapp, href: `https://wa.me/?text=${encodeURIComponent(text + " " + url)}` },
+    { icon: ICONS.facebook, href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}` },
+    { icon: ICONS.xTwitter, href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}` },
+    { icon: ICONS.telegram, href: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}` },
+  ];
+  const win = window.open(links[0].href, "_blank");
+  if (!win) { try { await navigator.clipboard.writeText(`${text} ${url}`); showToast(t("share.copied")); } catch {} }
+}
+
 function renderFavorites() {
   const favs = getFavorites().map((f) => getMessageById(f.messageId)).filter(Boolean);
   const container = document.getElementById("favoritesList");
@@ -956,7 +1088,7 @@ function setupAppearanceSwitch() {
 const RENDERERS = {
   home: renderHome, search: renderSearch, preacher: renderPreacher, player: renderPlayer, series: renderSeries,
   playlists: renderPlaylists, "playlist-create": renderPlaylistCreate, "playlist-detail": renderPlaylistDetail,
-  favorites: renderFavorites, profile: renderProfile, "onboarding": renderOnboardingLanguage,
+  favorites: renderFavorites, profile: renderProfile, "onboarding": renderOnboardingLanguage, live: renderLive,
 };
 
 // Sur desktop, les rails horizontaux n'avaient aucun moyen d'aller au-delà

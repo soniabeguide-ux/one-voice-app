@@ -35,6 +35,7 @@
     <nav class="side-nav" id="sideNav">
       <button class="side-link active" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span data-i18n="nav.home">Accueil</span></button>
       <button class="side-link" data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span data-i18n="nav.search">Recherche</span></button>
+      <button class="side-link" data-nav="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span data-i18n="nav.live">Direct</span></button>
       <button class="side-link" data-nav="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4c2-.3 3.7.7 4.5 2.2C10.8 4.7 12.5 3.7 14.5 4 18 4.5 19.5 8 17.5 12 15 16.5 12 21 12 21z"/></svg><span data-i18n="nav.favorites">Favoris</span></button>
       <button class="side-link" data-nav="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span data-i18n="nav.profile">Profil</span></button>
     </nav>
@@ -63,6 +64,8 @@
           <button class="toggle" id="themeToggle"></button>
         </header>
 
+        <div class="pathway-switch" id="pathwayToggle"></div>
+
         <div class="search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input type="text" id="searchInput" data-i18n-placeholder="home.searchPlaceholder" placeholder="Rechercher un prédicateur, un message…" />
@@ -73,6 +76,7 @@
         <div class="rail" id="homeRail"></div>
         <div class="section-title" data-i18n="home.explore">Explorer par thème</div>
         <div class="chip-row" id="homeThemeChips"></div>
+        <div id="homeSeriesSpotlight" style="display:none"></div>
         <div class="section-title" data-i18n="home.series">Séries en cours</div>
         <div id="homeSeries"></div>
 
@@ -211,6 +215,14 @@
     </section>
 
     <!-- ============ FAVORIS ============ -->
+    <!-- ============ DIRECT ============ -->
+    <section class="view" id="view-live">
+      <div class="container">
+        <header class="topbar"><span class="greeting" style="font-size:25px" data-i18n="live.title">Direct</span></header>
+        <div id="liveList"></div>
+      </div>
+    </section>
+
     <section class="view" id="view-favorites">
       <div class="container">
         <header class="topbar"><span class="greeting" style="font-size:25px" data-i18n="favorites.title">Favoris</span></header>
@@ -304,6 +316,7 @@
 <nav class="bottom-nav" id="bottomNav">
   <button data-nav="home" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span data-i18n="nav.home">Accueil</span></button>
   <button data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span data-i18n="nav.search">Recherche</span></button>
+  <button data-nav="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span data-i18n="nav.live">Direct</span></button>
   <button data-nav="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4c2-.3 3.7.7 4.5 2.2C10.8 4.7 12.5 3.7 14.5 4 18 4.5 19.5 8 17.5 12 15 16.5 12 21 12 21z"/></svg><span data-i18n="nav.favorites">Favoris</span></button>
   <button data-nav="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span data-i18n="nav.profile">Profil</span></button>
 </nav>

@@ -1,17 +1,25 @@
 # One Voice — PWA
 
-## Corrections de cette session
+## Ce qui a été ajouté dans cette session
 
-**Onboarding centré** : l'écran de choix de langue était collé en haut au lieu d'être centré verticalement — corrigé (`justify-content:center` sur toute la hauteur d'écran).
+**Ordre des prédicateurs** : Dr Mamadou Philippe Karambiri en 1ère position (ancien), Dr Raoul Wafo en 2ème. Le reste inchangé.
 
-**Géolocalisation retirée** : le mode Jour/Nuit automatique utilisait la position GPS pour calculer le vrai lever/coucher du soleil. Ça demandait une permission intrusive au premier lancement. Remplacé par une simple règle horaire (7h–20h = Jour), sans aucune permission demandée. Le bouton manuel Jour/Nuit fonctionne toujours pareil.
+**Onglet Direct** (nouveau, dans la nav principale) :
+- Vérifie en temps réel quels prédicateurs sont en direct sur YouTube (fonction `netlify/functions/check-live.mjs`, appelée à la demande à l'ouverture de l'onglet — pas planifiée)
+- Affichage façon Option A retenue : vignette assombrie, pastille rouge "EN DIRECT" qui pulse
+- Bouton de partage par carte : utilise le partage natif du téléphone quand disponible (fait apparaître les options "Ajouter à une story" si la plateforme le permet), avec repli sur WhatsApp/Facebook/X/Telegram/copier le lien
+- **Nécessite un déploiement via Git** (pas le glisser-déposer) puisque ça repose sur les fonctions Netlify, comme l'ingestion quotidienne
 
-**Traduction complète FR/EN** : toute l'interface (navigation, titres de section, boutons, états vides, écran À propos, pop-up d'installation, texte de partage, etc.) change réellement de langue selon le choix fait à l'onboarding ou dans Profil. Plus aucun texte ne reste figé en français quand on choisit l'anglais. Les thèmes (Foi, Prière, etc.) sont aussi traduits à l'affichage tout en gardant la même donnée en interne (le filtrage n'est pas cassé).
+**Série recommandée mise en avant sur l'Accueil** : une seule carte "Recommandé cette semaine", juste après les thèmes — prend la série la plus récemment ajoutée (`addedAt` dans `data.js`), pas une grille supplémentaire qui aurait alourdi l'écran.
 
-**Coupure de contenu à 1 an** : `CONTENT_CUTOFF` dans `data.js` est maintenant au 17 juillet 2025 (au lieu du 1er janvier 2026), comme demandé. Le script de récupération (`recuperer-messages.html`) et `scripts/backfill.mjs` ont aussi leur date par défaut alignée.
+**Bascule Vidéo/Audio** sur l'Accueil : le scaffold est en place (état sauvegardé, écran vide honnête en mode Audio en attendant que tu déposes du contenu sur Cloudflare R2). Le parcours Vidéo (YouTube, tout ce qu'on a construit jusqu'ici) reste le comportement par défaut et n'a pas changé.
 
-## Rappel : générer le vrai contenu
-Le contenu affiché reste celui de `data.js` (provisoire) tant que tu n'as pas lancé `recuperer-messages.html` avec ta clé API pour générer `messages.json`. Une fois ce fichier déposé à la racine et l'app redéployée, le contenu réel et complet prend le relais.
+## Un bug corrigé au passage
+En construisant le partage pour Direct, une modification précédente avait accidentellement supprimé la déclaration de la fonction `renderFavorites()` (le corps de la fonction restait mais plus son en-tête) — corrigé et revalidé.
 
-## Déploiement
-Identique à avant : glisse le contenu du dossier sur Netlify (drag-and-drop) pour l'app de base, ou connecte via Git si tu veux l'ingestion quotidienne automatique (variable d'environnement `YOUTUBE_API_KEY` à ajouter dans Netlify dans ce cas).
+## Prochaine étape pour le parcours Audio
+Le scaffold attend une vraie structure de données une fois que tu auras :
+1. Un compte Cloudflare R2 avec au moins un fichier audio déposé
+2. Les métadonnées par message : date réelle du culte, URL du fichier, durée
+
+Dis-moi quand tu es prête à commencer à peupler ça — je construirai le lecteur audio natif (MediaSession, lecture en fond) à ce moment-là, avec de vrais fichiers à tester.
