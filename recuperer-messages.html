@@ -34,43 +34,112 @@
   #result .label{ color:var(--muted); font-size:13px }
   #progress{ height:6px; background:var(--bg); border-radius:3px; overflow:hidden; margin-top:16px; display:none }
   #progressFill{ height:100%; background:var(--accent); width:0%; transition:width .3s }
+  .lang-switch{ display:flex; gap:8px; justify-content:flex-end; margin-bottom:16px }
+  .lang-btn{
+    display:flex; align-items:center; gap:7px; background:var(--surface); border:1px solid var(--border);
+    border-radius:100px; padding:7px 14px 7px 10px; color:var(--muted); font-size:12.5px; cursor:pointer;
+  }
+  .lang-btn.active{ border-color:var(--accent); color:var(--text); font-weight:600 }
+  .lang-btn svg{ border-radius:2px; flex-shrink:0 }
 </style>
 </head>
 <body>
-  <h1>Récupérer les messages YouTube</h1>
-  <div class="subtitle">Aucune installation, aucun terminal — tout se passe dans cette page.</div>
+  <div class="lang-switch">
+    <button class="lang-btn active" data-lang="fr" id="langFr">
+      <svg width="22" height="15" viewBox="0 0 3 2"><rect width="1" height="2" fill="#002395"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#ED2939"/></svg>
+      Français
+    </button>
+    <button class="lang-btn" data-lang="en" id="langEn">
+      <svg width="22" height="15" viewBox="0 0 32 22"><rect width="32" height="22" fill="#B22234"/><g fill="#fff"><rect y="2" width="32" height="1.7"/><rect y="5.4" width="32" height="1.7"/><rect y="8.8" width="32" height="1.7"/><rect y="12.2" width="32" height="1.7"/><rect y="15.6" width="32" height="1.7"/><rect y="19" width="32" height="1.7"/></g><rect width="13" height="11.7" fill="#3C3B6E"/></svg>
+      English
+    </button>
+  </div>
 
-  <div class="warn">
+  <h1 data-i18n="title">Récupérer les messages YouTube</h1>
+  <div class="subtitle" data-i18n="subtitle">Aucune installation, aucun terminal — tout se passe dans cette page.</div>
+
+  <div class="warn" data-i18n="warn">
     ⚠️ Cette clé reste uniquement dans ton navigateur (elle n'est envoyée qu'à Google).
     Ne mets pas cette page en ligne publiquement avec ta clé enregistrée, et ne partage jamais
     cette clé par message.
   </div>
 
   <div class="card">
-    <label for="apiKey">Clé API YouTube</label>
+    <label for="apiKey" data-i18n="apiKeyLabel">Clé API YouTube</label>
     <input type="password" id="apiKey" placeholder="AIzaSy..." autocomplete="off" />
 
     <div class="row">
       <input type="checkbox" id="remember" />
-      <label for="remember" style="margin:0">Se souvenir de la clé sur cet appareil</label>
+      <label for="remember" style="margin:0" data-i18n="rememberLabel">Se souvenir de la clé sur cet appareil</label>
     </div>
 
-    <label for="cutoff">Récupérer les messages depuis le</label>
+    <label for="cutoff" data-i18n="cutoffLabel">Récupérer les messages depuis le</label>
     <input type="date" id="cutoff" value="2025-07-17" />
 
-    <button id="startBtn">Lancer la récupération</button>
+    <button id="startBtn" data-i18n="startBtn">Lancer la récupération</button>
     <div id="progress"><div id="progressFill"></div></div>
     <div id="log"></div>
   </div>
 
   <div class="card" id="result">
     <div class="count" id="resultCount">0</div>
-    <div class="label">messages récupérés, prêts à télécharger</div>
-    <button id="downloadBtn">Télécharger messages.json</button>
-    <button class="secondary" id="restartBtn">Relancer une récupération</button>
+    <div class="label" data-i18n="resultLabel">messages récupérés, prêts à télécharger</div>
+    <button id="downloadBtn" data-i18n="downloadBtn">Télécharger messages.json</button>
+    <button class="secondary" id="restartBtn" data-i18n="restartBtn">Relancer une récupération</button>
   </div>
 
   <script>
+    // --- Traduction FR/EN ---
+    const I18N = {
+      fr: {
+        title: "Récupérer les messages YouTube",
+        subtitle: "Aucune installation, aucun terminal — tout se passe dans cette page.",
+        warn: "⚠️ Cette clé reste uniquement dans ton navigateur (elle n'est envoyée qu'à Google). Ne mets pas cette page en ligne publiquement avec ta clé enregistrée, et ne partage jamais cette clé par message.",
+        apiKeyLabel: "Clé API YouTube",
+        rememberLabel: "Se souvenir de la clé sur cet appareil",
+        cutoffLabel: "Récupérer les messages depuis le",
+        startBtn: "Lancer la récupération",
+        startBtnRunning: "Récupération en cours…",
+        resultLabel: "messages récupérés, prêts à télécharger",
+        downloadBtn: "Télécharger messages.json",
+        restartBtn: "Relancer une récupération",
+        alertNoKey: "Colle ta clé API YouTube d'abord.",
+        logNotFound: "chaîne introuvable",
+        logNoPlaylist: "playlist introuvable",
+        logVideos: "vidéo(s)",
+        logDone: "Terminé",
+        logTotal: "messages au total.",
+      },
+      en: {
+        title: "Retrieve YouTube messages",
+        subtitle: "No installation, no terminal — everything happens on this page.",
+        warn: "⚠️ This key stays only in your browser (it's only ever sent to Google). Don't put this page online publicly with your key saved, and never share this key in a message.",
+        apiKeyLabel: "YouTube API key",
+        rememberLabel: "Remember the key on this device",
+        cutoffLabel: "Retrieve messages since",
+        startBtn: "Start retrieval",
+        startBtnRunning: "Retrieving…",
+        resultLabel: "messages retrieved, ready to download",
+        downloadBtn: "Download messages.json",
+        restartBtn: "Start a new retrieval",
+        alertNoKey: "Paste your YouTube API key first.",
+        logNotFound: "channel not found",
+        logNoPlaylist: "playlist not found",
+        logVideos: "video(s)",
+        logDone: "Done",
+        logTotal: "messages total.",
+      },
+    };
+    let currentLang = localStorage.getItem("ov-tool-lang") || "fr";
+    function t(key) { return (I18N[currentLang] || I18N.fr)[key] || key; }
+    function applyLang() {
+      document.documentElement.lang = currentLang;
+      document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+      document.getElementById("langFr").classList.toggle("active", currentLang === "fr");
+      document.getElementById("langEn").classList.toggle("active", currentLang === "en");
+      if (!startBtn.disabled) startBtn.textContent = t("startBtn");
+    }
+
     // Liste des prédicateurs — garde-la synchronisée avec data.js si tu en ajoutes un.
     const PREACHERS = [
       { id: "raoul-wafo", name: "Dr Raoul Wafo", channelUrl: "https://www.youtube.com/@TempledelaFoiTV" },
@@ -220,6 +289,10 @@
     const savedKey = localStorage.getItem("ov-yt-key");
     if (savedKey) { apiKeyInput.value = savedKey; rememberBox.checked = true; }
 
+    document.getElementById("langFr").addEventListener("click", () => { currentLang = "fr"; localStorage.setItem("ov-tool-lang", "fr"); applyLang(); });
+    document.getElementById("langEn").addEventListener("click", () => { currentLang = "en"; localStorage.setItem("ov-tool-lang", "en"); applyLang(); });
+    applyLang();
+
     function log(text, cls) {
       logEl.style.display = "block";
       const line = document.createElement("div");
@@ -233,13 +306,13 @@
 
     startBtn.addEventListener("click", async () => {
       const key = apiKeyInput.value.trim();
-      if (!key) { alert("Colle ta clé API YouTube d'abord."); return; }
+      if (!key) { alert(t("alertNoKey")); return; }
       const cutoff = new Date(cutoffInput.value);
 
       rememberBox.checked ? localStorage.setItem("ov-yt-key", key) : localStorage.removeItem("ov-yt-key");
 
       startBtn.disabled = true;
-      startBtn.textContent = "Récupération en cours…";
+      startBtn.textContent = t("startBtnRunning");
       logEl.innerHTML = "";
       progressEl.style.display = "block";
       resultEl.style.display = "none";
@@ -250,10 +323,10 @@
       for (const preacher of PREACHERS) {
         try {
           const channelId = await resolveChannelId(preacher, key);
-          if (!channelId) { log(`⚠️  ${preacher.name} — chaîne introuvable`, "line-warn"); done++; updateProgress(done); continue; }
+          if (!channelId) { log(`⚠️  ${preacher.name} — ${t("logNotFound")}`, "line-warn"); done++; updateProgress(done); continue; }
 
           const uploads = await getUploadsPlaylistId(channelId, key);
-          if (!uploads) { log(`⚠️  ${preacher.name} — playlist introuvable`, "line-warn"); done++; updateProgress(done); continue; }
+          if (!uploads) { log(`⚠️  ${preacher.name} — ${t("logNoPlaylist")}`, "line-warn"); done++; updateProgress(done); continue; }
 
           const videos = await fetchVideosSince(uploads, cutoff, key);
           videos.forEach((v) => {
@@ -268,7 +341,7 @@
               contentType: v.contentType,
             });
           });
-          log(`✅ ${preacher.name} — ${videos.length} vidéo(s)`, "line-ok");
+          log(`✅ ${preacher.name} — ${videos.length} ${t("logVideos")}`, "line-ok");
         } catch (err) {
           log(`❌ ${preacher.name} — ${err.message}`, "line-err");
         }
@@ -279,9 +352,9 @@
       allMessages.sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
       lastMessages = allMessages;
 
-      log(`\n✨ Terminé : ${allMessages.length} messages au total.`, "line-ok");
+      log(`\n✨ ${t("logDone")} : ${allMessages.length} ${t("logTotal")}`, "line-ok");
       startBtn.disabled = false;
-      startBtn.textContent = "Lancer la récupération";
+      startBtn.textContent = t("startBtn");
       resultCount.textContent = allMessages.length;
       resultEl.style.display = "block";
     });

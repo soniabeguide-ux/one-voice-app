@@ -23,3 +23,27 @@ Le scaffold attend une vraie structure de données une fois que tu auras :
 2. Les métadonnées par message : date réelle du culte, URL du fichier, durée
 
 Dis-moi quand tu es prête à commencer à peupler ça — je construirai le lecteur audio natif (MediaSession, lecture en fond) à ce moment-là, avec de vrais fichiers à tester.
+
+---
+
+## Formulaire de dépôt audio (`deposer-audio.html`)
+
+Page à part, à ouvrir directement (double-clic) ou à héberger séparément — permet à un prédicateur ou son équipe de déposer un message audio directement sur Cloudflare R2, sans jamais voir tes clés d'accès.
+
+### Ce qu'il te faut configurer avant que ça marche
+Dans **Netlify → Site configuration → Environment variables**, ajoute :
+- `R2_ACCOUNT_ID`
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+- `R2_BUCKET_NAME`
+
+(valeurs obtenues dans Cloudflare : R2 → Manage R2 API Tokens → Create API Token, avec permission "Object Read & Write")
+
+### Comment ça fonctionne
+1. La page construit automatiquement le nom de fichier correct (`identifiant-prédicateur_AAAA-MM-JJ_titre.mp3`) à partir des champs remplis — la syntaxe reste affichée en haut de page, mais impossible de se tromper puisque c'est généré, pas tapé à la main
+2. `get-upload-url.mjs` génère une URL signée à usage unique (valable 5 minutes) sans jamais exposer tes clés R2 au navigateur
+3. Le fichier part directement du navigateur vers Cloudflare — jamais par Netlify, pas de limite de taille de notre côté
+4. `confirm-upload.mjs` enregistre la durée réelle et marque le dépôt comme prêt
+
+### Ce qui reste à faire ensuite
+Les métadonnées sont stockées (Netlify Blobs), mais **l'app ne lit pas encore ce contenu** — il faut construire la liaison entre ce stockage et l'écran Audio de l'app (actuellement en écran d'attente). Prochaine étape logique une fois que le dépôt aura été testé avec un vrai fichier.
