@@ -47,3 +47,24 @@ Dans **Netlify → Site configuration → Environment variables**, ajoute :
 
 ### Ce qui reste à faire ensuite
 Les métadonnées sont stockées (Netlify Blobs), mais **l'app ne lit pas encore ce contenu** — il faut construire la liaison entre ce stockage et l'écran Audio de l'app (actuellement en écran d'attente). Prochaine étape logique une fois que le dépôt aura été testé avec un vrai fichier.
+
+---
+
+## Parcours Audio branché (Option A)
+
+L'écran d'accueil, en mode Audio, affiche maintenant un vrai contenu — à l'une, récemment ajoutés, prédicateurs — mélangé comme en mode Vidéo (option A retenue), lu depuis Cloudflare via `get-audio-messages.mjs`.
+
+**Nouvelle variable d'environnement Netlify à ajouter**, en plus des 4 déjà en place :
+- `R2_PUBLIC_URL_BASE` — l'adresse publique de ton bucket (ex: `https://pub-xxxxxxxx.r2.dev`, visible dans les paramètres du bucket une fois l'accès public activé, ou ton domaine personnalisé si tu en as connecté un)
+
+**Pochettes** : comme aucune vraie photo n'existe encore, chaque pochette affiche le nom du prédicateur sur un fond dégradé — lisible, distinctif, sans dépendre d'images à fournir.
+
+**Lecteur audio natif** : contrairement au lecteur vidéo YouTube, celui-ci utilise l'API MediaSession — la lecture continue en fond et sur écran verrouillé, avec les contrôles qui apparaissent sur l'écran de verrouillage. Bouton de téléchargement ajouté (ouvre le fichier directement).
+
+## Compression automatique dans `deposer-audio.html`
+
+Le fichier est maintenant compressé en MP3 64 kbps mono **directement dans le navigateur** avant l'envoi — aucune action supplémentaire pour la personne qui dépose. Le message de confirmation affiche le pourcentage de poids économisé.
+
+## Récupération YouTube : coupure au 1er janvier 2023
+
+Mise à jour dans `data.js`, `recuperer-messages.html`, `scripts/backfill.mjs` et la fonction quotidienne — il faudra relancer une récupération complète pour que le catalogue remonte jusque-là.

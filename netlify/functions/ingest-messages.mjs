@@ -15,7 +15,7 @@
 import { getStore } from "@netlify/blobs";
 import { PREACHERS } from "../../data.mjs";
 
-const CUTOFF = new Date("2025-07-17T00:00:00Z");
+const CUTOFF = new Date("2023-01-01T00:00:00Z");
 const API = "https://www.googleapis.com/youtube/v3";
 
 export default async () => {

@@ -29,7 +29,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
 
 const API_KEY = process.env.YOUTUBE_API_KEY;
-const CUTOFF = new Date(process.env.CUTOFF_DATE || "2025-07-17T00:00:00Z");
+const CUTOFF = new Date(process.env.CUTOFF_DATE || "2023-01-01T00:00:00Z");
 
 if (!API_KEY) {
   console.error("\n❌ Clé API manquante.\n");

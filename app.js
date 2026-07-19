@@ -33,6 +33,8 @@ const I18N = {
     "player.sleepTimer": "Minuteur", "player.sleepTimerPrompt": "Arrêter la lecture dans combien de minutes ?",
     "player.audioNote": "Mode audio : la vidéo est masquée, seul le son est diffusé. La lecture s'interrompt si l'écran se verrouille (limite YouTube sur mobile).",
     "player.videoNote": "Contenu vidéo YouTube — la lecture s'interrompt si l'écran se verrouille.",
+    "audioPlayer.note": "Lecture audio native — continue en fond et écran verrouillé.",
+    "audioPlayer.download": "Télécharger",
     "player.fromSeries": "Depuis « {name} »",
     "playlists.title": "Mes playlists", "playlists.create": "Créer une playlist", "playlists.empty": "Aucune playlist pour l'instant.",
     "playlists.count": "{n} message|{n} messages",
@@ -96,6 +98,8 @@ const I18N = {
     "player.sleepTimer": "Timer", "player.sleepTimerPrompt": "Stop playback after how many minutes?",
     "player.audioNote": "Audio mode: the video is hidden, only the sound plays. Playback stops if the screen locks (YouTube limitation on mobile).",
     "player.videoNote": "YouTube video content — playback stops if the screen locks.",
+    "audioPlayer.note": "Native audio playback — continues in the background and on the lock screen.",
+    "audioPlayer.download": "Download",
     "player.fromSeries": "From \"{name}\"",
     "playlists.title": "My playlists", "playlists.create": "Create a playlist", "playlists.empty": "No playlists yet.",
     "playlists.count": "{n} message|{n} messages",
@@ -216,6 +220,17 @@ function allMessages({ includeAllTypes = false } = {}) {
     .filter((m) => includeAllTypes || isSermon(m));
 }
 function getPreacher(id) { return PREACHERS.find((p) => p.id === id); }
+
+// Pochette audio : pas de vraie photo disponible pour l'instant, donc on affiche
+// le nom du prédicateur sur un fond dégradé — lisible, distinctif, sans dépendre
+// d'images qui n'existent pas encore.
+function audioCoverHTML(preacherName, size = "small") {
+  const fontSize = size === "large" ? "clamp(20px,6vw,32px)" : "13px";
+  const padding = size === "large" ? "24px" : "10px";
+  return `<div class="audio-cover audio-cover-${size}">
+    <span style="font-size:${fontSize}; padding:${padding}">${escapeHtml(preacherName)}</span>
+  </div>`;
+}
 function getMessageById(id) { return allMessages({ includeAllTypes: true }).find((m) => m.id === id); }
 function thumbUrl(videoId) { return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`; }
 function initials(name) {
@@ -352,12 +367,7 @@ function renderHome() {
   renderPathwayToggle();
 
   if ((localStorage.getItem("ov:pathway") || "video") === "audio") {
-    document.getElementById("homeFeatured").innerHTML = `<div class="empty-state">${t("home.audioEmpty")}</div>`;
-    document.getElementById("homeRail").innerHTML = "";
-    document.getElementById("homeThemeChips").innerHTML = "";
-    document.getElementById("homeSeriesSpotlight").style.display = "none";
-    document.getElementById("homeSeries").innerHTML = "";
-    document.getElementById("homePreacherList").innerHTML = "";
+    renderAudioHome();
     return;
   }
 
@@ -452,6 +462,172 @@ function renderPathwayToggle() {
     renderHome();
   }));
 }
+let audioMessagesCache = null;
+async function fetchAudioMessages() {
+  if (audioMessagesCache) return audioMessagesCache;
+  try {
+    const res = await fetch("/.netlify/functions/get-audio-messages");
+    const data = await res.json();
+    audioMessagesCache = Array.isArray(data.messages) ? data.messages : [];
+  } catch {
+    audioMessagesCache = [];
+  }
+  return audioMessagesCache;
+}
+
+async function renderAudioHome() {
+  document.getElementById("homeThemeChips").innerHTML = "";
+  document.getElementById("homeSeriesSpotlight").style.display = "none";
+  document.getElementById("homeSeries").innerHTML = "";
+  document.getElementById("homeFeatured").innerHTML = `<div class="empty-state">${t("live.checking")}</div>`;
+  document.getElementById("homeRail").innerHTML = "";
+
+  const audioMsgs = (await fetchAudioMessages()).sort((a, b) => new Date(b.cultDate) - new Date(a.cultDate));
+
+  if (audioMsgs.length === 0) {
+    document.getElementById("homeFeatured").innerHTML = `<div class="empty-state">${t("home.audioEmpty")}</div>`;
+    renderAudioPreacherList();
+    return;
+  }
+
+  const featured = audioMsgs[0];
+  const fp = getPreacher(featured.preacherId);
+  document.getElementById("homeFeatured").innerHTML = `
+    <div class="section-title">${t("home.featured")}</div>
+    <div class="featured" data-mid="${featured.id}" style="display:flex; align-items:stretch">
+      ${audioCoverHTML(fp ? fp.name : "", "small").replace('audio-cover-small', 'audio-cover-small" style="width:100%;height:100%;border-radius:0')}
+      <div class="scrim">
+        <div class="title">${escapeHtml(formatTitle(featured.title))}</div>
+        <div class="meta">${escapeHtml(fp ? fp.name : "")} · ${formatMessageDate(featured.cultDate)}${featured.durationSeconds ? " · " + Math.round(featured.durationSeconds / 60) + " min" : ""}</div>
+      </div>
+    </div>`;
+  document.querySelector("#homeFeatured .featured").addEventListener("click", () => openAudioPlayer(featured));
+
+  document.getElementById("homeRail").innerHTML = audioMsgs.slice(1, 9).map((m) => {
+    const p = getPreacher(m.preacherId);
+    return `<div class="rail-item" data-mid="${m.id}">
+      ${audioCoverHTML(p ? p.name : "", "small")}
+      <div class="title">${escapeHtml(formatTitle(m.title))}</div>
+      <div class="preacher">${escapeHtml(p ? p.name : "")}</div>
+      <div class="date">${formatMessageDate(m.cultDate)}</div>
+    </div>`;
+  }).join("");
+  document.querySelectorAll("#homeRail .rail-item").forEach((el) => el.addEventListener("click", () => {
+    const m = audioMsgs.find((x) => x.id === el.dataset.mid);
+    if (m) openAudioPlayer(m);
+  }));
+
+  renderAudioPreacherList();
+}
+
+function renderAudioPreacherList() {
+  document.getElementById("homePreacherList").innerHTML = PREACHERS.filter((p) => p.language === state.langTab).map((p) => `
+    <div class="p-row" data-pid="${p.id}">
+      <div class="avatar">${initials(p.name)}</div>
+      <div><div class="name">${escapeHtml(p.name)}</div><div class="min">${escapeHtml(p.ministry)}</div></div>
+    </div>`).join("");
+  document.querySelectorAll("#homePreacherList .p-row").forEach((el) => el.addEventListener("click", () => openPreacher(el.dataset.pid)));
+}
+
+async function openAudioPlayer(audioMessage) {
+  state.currentAudioMessage = audioMessage;
+  navigate("audio-player");
+}
+
+function refreshLangTabs() {
+  document.getElementById("tabFr").classList.toggle("active", state.langTab === "fr");
+  document.getElementById("tabEn").classList.toggle("active", state.langTab === "en");
+  if ((localStorage.getItem("ov:pathway") || "video") === "audio") renderAudioPreacherList();
+  else renderHomePreacherTabs();
+}
+async function renderAudioPlayer() {
+  const m = state.currentAudioMessage;
+  if (!m) { navigate("home"); return; }
+  const p = getPreacher(m.preacherId);
+
+  document.getElementById("audioPlayerCover").innerHTML = "";
+  document.getElementById("audioPlayerCover").outerHTML = audioCoverHTML(p ? p.name : "", "large").replace('class="audio-cover audio-cover-large"', 'class="audio-cover audio-cover-large" id="audioPlayerCover"');
+  document.getElementById("audioPlayerTitle").textContent = formatTitle(m.title);
+  document.getElementById("audioPlayerPreacher").textContent = p ? p.name : "";
+
+  const audio = document.getElementById("audioPlayerEl");
+  audio.src = m.audioUrl || "";
+  audio.playbackRate = 1;
+
+  // API MediaSession : affiche le titre/prédicateur sur l'écran verrouillé et
+  // permet la lecture en fond — c'est ce qui manquait avec YouTube.
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: formatTitle(m.title),
+      artist: p ? p.name : "One Voice",
+      album: "One Voice",
+    });
+    navigator.mediaSession.setActionHandler("play", () => audio.play());
+    navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+    navigator.mediaSession.setActionHandler("seekbackward", () => { audio.currentTime = Math.max(0, audio.currentTime - 15); });
+    navigator.mediaSession.setActionHandler("seekforward", () => { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 15); });
+  }
+
+  const playBtn = document.getElementById("audioPlayPause");
+  const scrubFill = document.getElementById("audioScrubFill");
+  const scrubTrack = document.getElementById("audioScrubTrack");
+  const elapsedEl = document.getElementById("audioTimeElapsed");
+  const totalEl = document.getElementById("audioTimeTotal");
+
+  function refreshPlayIcon() {
+    playBtn.innerHTML = !audio.paused
+      ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>';
+  }
+  playBtn.onclick = () => { audio.paused ? audio.play() : audio.pause(); };
+  audio.onplay = refreshPlayIcon; audio.onpause = refreshPlayIcon;
+  audio.ontimeupdate = () => {
+    const dur = audio.duration || 0, cur = audio.currentTime || 0;
+    scrubFill.style.width = dur ? `${(cur / dur) * 100}%` : "0%";
+    elapsedEl.textContent = formatSeconds(cur);
+    totalEl.textContent = formatSeconds(dur);
+    if (Math.floor(cur) % 5 === 0) {
+      if (dur && cur >= dur - 10) clearPosition(m.id); else savePosition(m.id, cur);
+    }
+  };
+  audio.onloadedmetadata = () => {
+    const saved = getSavedPosition(m.id);
+    if (saved > 5 && audio.duration - saved > 10) audio.currentTime = saved;
+    audio.play().catch(() => {});
+    recordHistory(m.id);
+  };
+  scrubTrack.onclick = (e) => {
+    const rect = scrubTrack.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    if (audio.duration) audio.currentTime = ratio * audio.duration;
+  };
+  document.getElementById("audioSkipBack").onclick = () => { audio.currentTime = Math.max(0, audio.currentTime - 15); };
+  document.getElementById("audioSkipFwd").onclick = () => { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 15); };
+
+  const rateRow = document.getElementById("audioRateRow");
+  const rates = [0.75, 1, 1.25, 1.5];
+  rateRow.innerHTML = rates.map((r) => `<button class="rate-chip ${r === 1 ? "active" : ""}" data-rate="${r}">${r}×</button>`).join("");
+  rateRow.querySelectorAll(".rate-chip").forEach((btn) => btn.addEventListener("click", () => {
+    audio.playbackRate = parseFloat(btn.dataset.rate);
+    rateRow.querySelectorAll(".rate-chip").forEach((b) => b.classList.toggle("active", b === btn));
+  }));
+
+  const favBtn = document.getElementById("audioPlayerFav");
+  function refreshFav() {
+    favBtn.classList.toggle("active", isFavorite(m.id));
+    favBtn.innerHTML = (isFavorite(m.id) ? ICONS.heartFilled : ICONS.heartOutline) + `<span>${t("player.favorite")}</span>`;
+  }
+  refreshFav();
+  favBtn.onclick = () => { toggleFavorite(m.id); refreshFav(); };
+
+  const dlBtn = document.getElementById("audioPlayerDownload");
+  dlBtn.innerHTML = ICONS.link + `<span>${t("audioPlayer.download")}</span>`;
+  dlBtn.onclick = () => { if (m.audioUrl) window.open(m.audioUrl, "_blank"); };
+
+  refreshSleepTimerButton();
+  document.getElementById("audioPlayerSleepTimer").onclick = openSleepTimerMenu;
+}
+
 function renderHomePreacherTabs() {
   document.getElementById("tabFr").classList.toggle("active", state.langTab === "fr");
   document.getElementById("tabEn").classList.toggle("active", state.langTab === "en");
@@ -1089,6 +1265,7 @@ const RENDERERS = {
   home: renderHome, search: renderSearch, preacher: renderPreacher, player: renderPlayer, series: renderSeries,
   playlists: renderPlaylists, "playlist-create": renderPlaylistCreate, "playlist-detail": renderPlaylistDetail,
   favorites: renderFavorites, profile: renderProfile, "onboarding": renderOnboardingLanguage, live: renderLive,
+  "audio-player": renderAudioPlayer,
 };
 
 // Sur desktop, les rails horizontaux n'avaient aucun moyen d'aller au-delà
@@ -1142,8 +1319,8 @@ function init() {
   document.querySelectorAll("#bottomNav button, #sideNav button").forEach((btn) => btn.addEventListener("click", () => resetToTab(btn.dataset.nav)));
   document.querySelectorAll("[data-back]").forEach((btn) => btn.addEventListener("click", () => goBackTo(btn.dataset.back)));
 
-  document.getElementById("tabFr").addEventListener("click", () => { state.langTab = "fr"; renderHomePreacherTabs(); });
-  document.getElementById("tabEn").addEventListener("click", () => { state.langTab = "en"; renderHomePreacherTabs(); });
+  document.getElementById("tabFr").addEventListener("click", () => { state.langTab = "fr"; refreshLangTabs(); });
+  document.getElementById("tabEn").addEventListener("click", () => { state.langTab = "en"; refreshLangTabs(); });
   document.getElementById("searchInput").addEventListener("focus", () => navigate("search"));
 
   document.getElementById("menuPlaylists").addEventListener("click", () => navigate("playlists"));

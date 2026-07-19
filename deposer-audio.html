@@ -52,6 +52,7 @@
   .lang-btn.active{ border-color:var(--accent); color:var(--text); font-weight:600 }
   .lang-btn svg{ border-radius:2px; flex-shrink:0 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.0/lame.min.js"></script>
 </head>
 <body>
   <div class="lang-switch">
@@ -148,8 +149,7 @@
         cancelBtn: "Annuler",
         saveError: "La correction n'a pas pu être enregistrée.",
         preparing: "…",
-      },
-      en: {
+        compressing: "Compression du fichier en cours…",
         title: "Deposit an audio message",
         subtitle: "This form sends the file directly to Cloudflare, naming it automatically using the correct syntax.",
         syntaxLabel: "Syntax used to name the file",
@@ -176,6 +176,7 @@
         cancelBtn: "Cancel",
         saveError: "The correction couldn't be saved.",
         preparing: "…",
+        compressing: "Compressing the file…",
       },
     };
     let currentLang = localStorage.getItem("ov-tool-lang") || "fr";
@@ -301,6 +302,45 @@
       });
     }
 
+    // Compresse le fichier en MP3 64 kbps mono, entièrement dans le navigateur —
+    // le fichier d'origine ne quitte jamais l'appareil, seule cette version
+    // allégée est envoyée. Rien n'est demandé à la personne qui dépose : ça se
+    // passe automatiquement entre le choix du fichier et l'envoi.
+    async function compressAudio(file, onProgress) {
+      const arrayBuffer = await file.arrayBuffer();
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+
+      // Convertit en mono (moyenne des canaux si stéréo) — la parole n'a pas besoin de stéréo
+      const samples = decoded.numberOfChannels > 1
+        ? decoded.getChannelData(0).map((v, i) => (v + decoded.getChannelData(1)[i]) / 2)
+        : decoded.getChannelData(0);
+
+      // Convertit les échantillons flottants (-1..1) en entiers 16 bits, format attendu par l'encodeur
+      const samples16 = new Int16Array(samples.length);
+      for (let i = 0; i < samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        samples16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+      }
+
+      const encoder = new lamejs.Mp3Encoder(1, decoded.sampleRate, 64); // mono, débit d'origine, 64 kbps
+      const blockSize = 1152;
+      const mp3Chunks = [];
+      const totalBlocks = Math.ceil(samples16.length / blockSize);
+
+      for (let i = 0; i < samples16.length; i += blockSize) {
+        const chunk = samples16.subarray(i, i + blockSize);
+        const encoded = encoder.encodeBuffer(chunk);
+        if (encoded.length > 0) mp3Chunks.push(encoded);
+        if (onProgress && i % (blockSize * 200) === 0) onProgress(Math.min(95, Math.round((i / blockSize / totalBlocks) * 100)));
+      }
+      const final = encoder.flush();
+      if (final.length > 0) mp3Chunks.push(final);
+
+      audioCtx.close();
+      return new Blob(mp3Chunks, { type: "audio/mpeg" });
+    }
+
     submitBtn.addEventListener("click", async () => {
       const file = fileEl.files[0];
       if (!file) return;
@@ -310,9 +350,19 @@
       statusEl.textContent = "";
       statusEl.className = "";
       progressWrap.style.display = "block";
-      progressFill.style.width = "5%";
+      progressFill.style.width = "2%";
+      statusEl.textContent = t("compressing");
+      statusEl.className = "";
 
       try {
+        // 1. Compression côté navigateur — le fichier d'origine ne part jamais tel quel
+        const originalDuration = await getAudioDuration(file);
+        const compressedBlob = await compressAudio(file, (pct) => {
+          progressFill.style.width = `${Math.round(pct * 0.5)}%`; // la compression occupe la première moitié de la barre
+        });
+        statusEl.textContent = "";
+
+        // 2. Préparation de l'envoi (toujours en .mp3, puisque la compression convertit systématiquement dans ce format)
         const res = await fetch("/.netlify/functions/get-upload-url", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -320,37 +370,38 @@
             preacherId,
             cultDate: dateEl.value,
             title: titleEl.value.trim(),
-            fileExtension: currentExtension(),
+            fileExtension: "mp3",
           }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Erreur lors de la préparation de l'envoi.");
 
-        progressFill.style.width = "20%";
+        progressFill.style.width = "55%";
 
+        // 3. Envoi du fichier compressé (pas l'original) vers Cloudflare R2
         await new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open("PUT", data.uploadUrl);
-          xhr.setRequestHeader("Content-Type", file.type || "audio/mpeg");
+          xhr.setRequestHeader("Content-Type", "audio/mpeg");
           xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) progressFill.style.width = `${20 + (e.loaded / e.total) * 70}%`;
+            if (e.lengthComputable) progressFill.style.width = `${55 + (e.loaded / e.total) * 40}%`;
           };
           xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Échec de l'envoi (${xhr.status})`)));
           xhr.onerror = () => reject(new Error("Échec de l'envoi (connexion)."));
-          xhr.send(file);
+          xhr.send(compressedBlob);
         });
 
-        progressFill.style.width = "92%";
-        const duration = await getAudioDuration(file);
+        progressFill.style.width = "97%";
 
         await fetch("/.netlify/functions/confirm-upload", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: data.key, durationSeconds: duration }),
+          body: JSON.stringify({ key: data.key, durationSeconds: originalDuration }),
         });
 
+        const savedKb = Math.round((1 - compressedBlob.size / file.size) * 100);
         progressFill.style.width = "100%";
-        statusEl.textContent = `✅ Message déposé avec succès : ${data.key}`;
+        statusEl.textContent = `✅ Message déposé avec succès (compression : -${Math.max(0, savedKb)}% de poids) : ${data.key}`;
         statusEl.className = "status-ok";
         fileEl.value = "";
         titleEl.value = "";
