@@ -109546,18 +109546,8 @@
     "title": "THANK YOU LORD! THE BATTLE IS OVER || SUNDAY SERVICE || 19TH JULY 2026",
     "theme": "Foi",
     "publishedAt": "2026-07-19T06:17:52Z",
-    "durationSeconds": 0,
-    "contentType": "autre"
-  },
-  {
-    "id": "m-eno-jerry-hfVnsrRvGNU",
-    "preacherId": "eno-jerry",
-    "videoId": "hfVnsrRvGNU",
-    "title": "THANK YOU LORD! THE BATTLE IS OVER || Sunday Service || 19th July 2026",
-    "theme": "Foi",
-    "publishedAt": "2026-07-19T07:01:24Z",
-    "durationSeconds": 0,
-    "contentType": "autre"
+    "durationSeconds": 17714,
+    "contentType": "predication"
   },
   {
     "id": "m-mamadou-karambiri-gJ7viOaBK8I",
@@ -109598,5 +109588,15 @@
     "publishedAt": "2026-07-19T10:24:58Z",
     "durationSeconds": 9331,
     "contentType": "louange"
+  },
+  {
+    "id": "m-eno-jerry-hfVnsrRvGNU",
+    "preacherId": "eno-jerry",
+    "videoId": "hfVnsrRvGNU",
+    "title": "THANK YOU LORD! THE BATTLE IS OVER || Sunday Service || 19th July 2026",
+    "theme": "Foi",
+    "publishedAt": "2026-07-19T12:04:14Z",
+    "durationSeconds": 15810,
+    "contentType": "predication"
   }
 ]

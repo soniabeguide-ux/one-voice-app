@@ -150,6 +150,8 @@
         saveError: "La correction n'a pas pu être enregistrée.",
         preparing: "…",
         compressing: "Compression du fichier en cours…",
+      },
+      en: {
         title: "Deposit an audio message",
         subtitle: "This form sends the file directly to Cloudflare, naming it automatically using the correct syntax.",
         syntaxLabel: "Syntax used to name the file",
@@ -179,7 +181,7 @@
         compressing: "Compressing the file…",
       },
     };
-    let currentLang = localStorage.getItem("ov-tool-lang") || "fr";
+    let currentLang = localStorage.getItem("ov-deposit-lang") || "fr";
     function t(key) { return (I18N[currentLang] || I18N.fr)[key] || key; }
     function applyLang() {
       document.documentElement.lang = currentLang;
@@ -355,14 +357,26 @@
       statusEl.className = "";
 
       try {
-        // 1. Compression côté navigateur — le fichier d'origine ne part jamais tel quel
+        // 1. Compression côté navigateur — si elle échoue (fichier trop volumineux
+        // ou format que le décodeur ne supporte pas), on envoie l'original tel
+        // quel plutôt que de bloquer le dépôt : mieux vaut un fichier plus lourd
+        // que pas de dépôt du tout.
         const originalDuration = await getAudioDuration(file);
-        const compressedBlob = await compressAudio(file, (pct) => {
-          progressFill.style.width = `${Math.round(pct * 0.5)}%`; // la compression occupe la première moitié de la barre
-        });
+        let uploadBlob = file;
+        let usedExtension = currentExtension();
+        let compressionFailed = false;
+        try {
+          uploadBlob = await compressAudio(file, (pct) => {
+            progressFill.style.width = `${Math.round(pct * 0.5)}%`; // la compression occupe la première moitié de la barre
+          });
+          usedExtension = "mp3";
+        } catch (compressErr) {
+          console.warn("Compression impossible, envoi du fichier original :", compressErr.message);
+          compressionFailed = true;
+        }
         statusEl.textContent = "";
 
-        // 2. Préparation de l'envoi (toujours en .mp3, puisque la compression convertit systématiquement dans ce format)
+        // 2. Préparation de l'envoi
         const res = await fetch("/.netlify/functions/get-upload-url", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -370,7 +384,7 @@
             preacherId,
             cultDate: dateEl.value,
             title: titleEl.value.trim(),
-            fileExtension: "mp3",
+            fileExtension: usedExtension,
           }),
         });
         const data = await res.json();
@@ -378,17 +392,17 @@
 
         progressFill.style.width = "55%";
 
-        // 3. Envoi du fichier compressé (pas l'original) vers Cloudflare R2
+        // 3. Envoi du fichier (compressé, ou original si la compression a échoué)
         await new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
           xhr.open("PUT", data.uploadUrl);
-          xhr.setRequestHeader("Content-Type", "audio/mpeg");
+          xhr.setRequestHeader("Content-Type", compressionFailed ? (file.type || "audio/mpeg") : "audio/mpeg");
           xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) progressFill.style.width = `${55 + (e.loaded / e.total) * 40}%`;
           };
           xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Échec de l'envoi (${xhr.status})`)));
           xhr.onerror = () => reject(new Error("Échec de l'envoi (connexion)."));
-          xhr.send(compressedBlob);
+          xhr.send(uploadBlob);
         });
 
         progressFill.style.width = "97%";
@@ -399,9 +413,11 @@
           body: JSON.stringify({ key: data.key, durationSeconds: originalDuration }),
         });
 
-        const savedKb = Math.round((1 - compressedBlob.size / file.size) * 100);
+        const savedPct = compressionFailed ? 0 : Math.round((1 - uploadBlob.size / file.size) * 100);
         progressFill.style.width = "100%";
-        statusEl.textContent = `✅ Message déposé avec succès (compression : -${Math.max(0, savedKb)}% de poids) : ${data.key}`;
+        statusEl.textContent = compressionFailed
+          ? `✅ Message déposé avec succès (envoyé sans compression — fichier trop volumineux pour être traité par le navigateur) : ${data.key}`
+          : `✅ Message déposé avec succès (compression : -${Math.max(0, savedPct)}% de poids) : ${data.key}`;
         statusEl.className = "status-ok";
         fileEl.value = "";
         titleEl.value = "";
@@ -414,8 +430,8 @@
       }
     });
 
-    document.getElementById("langFr").addEventListener("click", () => { currentLang = "fr"; localStorage.setItem("ov-tool-lang", "fr"); applyLang(); });
-    document.getElementById("langEn").addEventListener("click", () => { currentLang = "en"; localStorage.setItem("ov-tool-lang", "en"); applyLang(); });
+    document.getElementById("langFr").addEventListener("click", () => { currentLang = "fr"; localStorage.setItem("ov-deposit-lang", "fr"); applyLang(); });
+    document.getElementById("langEn").addEventListener("click", () => { currentLang = "en"; localStorage.setItem("ov-deposit-lang", "en"); applyLang(); });
     applyLang();
   </script>
 </body>
