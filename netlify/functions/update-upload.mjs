@@ -15,7 +15,7 @@ export default async (req) => {
     return new Response(JSON.stringify({ error: "Requête invalide." }), { status: 400 });
   }
 
-  const { id, title, cultDate } = body;
+  const { id, title, cultDate, ready, durationSeconds } = body;
   if (!id) return new Response(JSON.stringify({ error: "Identifiant manquant." }), { status: 400 });
 
   const store = getStore("one-voice-audio");
@@ -24,6 +24,8 @@ export default async (req) => {
   if (!entry) return new Response(JSON.stringify({ error: "Dépôt introuvable." }), { status: 404 });
 
   if (title) entry.title = title;
+  if (typeof ready === "boolean") entry.ready = ready;
+  if (typeof durationSeconds === "number" && durationSeconds > 0) entry.durationSeconds = durationSeconds;
   if (cultDate) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(cultDate)) {
       return new Response(JSON.stringify({ error: "Format de date invalide (attendu AAAA-MM-JJ)." }), { status: 400 });

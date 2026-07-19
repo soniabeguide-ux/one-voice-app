@@ -109540,24 +109540,14 @@
     "contentType": "autre"
   },
   {
-    "id": "m-eno-jerry-EFr6FbmMqwU",
-    "preacherId": "eno-jerry",
-    "videoId": "EFr6FbmMqwU",
-    "title": "THANK YOU LORD! THE BATTLE IS OVER || SUNDAY SERVICE || 19TH JULY 2026",
-    "theme": "Foi",
-    "publishedAt": "2026-07-19T06:17:52Z",
-    "durationSeconds": 17714,
-    "contentType": "predication"
-  },
-  {
     "id": "m-mamadou-karambiri-gJ7viOaBK8I",
     "preacherId": "mamadou-karambiri",
     "videoId": "gJ7viOaBK8I",
     "title": "May it be done unto you according to your faith I Pastor Mamadou Philippe KARAMBIRI",
     "theme": "Foi",
     "publishedAt": "2026-07-19T08:18:53Z",
-    "durationSeconds": 0,
-    "contentType": "autre"
+    "durationSeconds": 9965,
+    "contentType": "predication"
   },
   {
     "id": "m-mamadou-karambiri-U9iu0Wkbi-M",
@@ -109566,8 +109556,8 @@
     "title": "Qu'il vous soit fait selon votre foi I Pasteur Mamadou Philippe KARAMBIRI",
     "theme": "Foi",
     "publishedAt": "2026-07-19T09:01:03Z",
-    "durationSeconds": 0,
-    "contentType": "autre"
+    "durationSeconds": 13394,
+    "contentType": "predication"
   },
   {
     "id": "m-mamadou-karambiri-dLvTeYBaqI8",
@@ -109597,6 +109587,16 @@
     "theme": "Foi",
     "publishedAt": "2026-07-19T12:04:14Z",
     "durationSeconds": 15810,
+    "contentType": "predication"
+  },
+  {
+    "id": "m-eno-jerry-EFr6FbmMqwU",
+    "preacherId": "eno-jerry",
+    "videoId": "EFr6FbmMqwU",
+    "title": "THANK YOU LORD! THE BATTLE IS OVER || SUNDAY SERVICE || 19TH JULY 2026",
+    "theme": "Foi",
+    "publishedAt": "2026-07-19T12:07:56Z",
+    "durationSeconds": 17714,
     "contentType": "predication"
   }
 ]

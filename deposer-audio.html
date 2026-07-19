@@ -144,7 +144,9 @@
         statusReady: "Prêt",
         statusPending: "En cours",
         correctBtn: "Corriger",
+        markReadyBtn: "Marquer comme prêt",
         titlePlaceholder: "Titre corrigé",
+        durationPlaceholder: "Durée réelle (minutes)",
         saveBtn: "Enregistrer",
         cancelBtn: "Annuler",
         saveError: "La correction n'a pas pu être enregistrée.",
@@ -173,7 +175,9 @@
         statusReady: "Ready",
         statusPending: "Processing",
         correctBtn: "Edit",
+        markReadyBtn: "Mark as ready",
         titlePlaceholder: "Corrected title",
+        durationPlaceholder: "Actual duration (minutes)",
         saveBtn: "Save",
         cancelBtn: "Cancel",
         saveError: "The correction couldn't be saved.",
@@ -259,11 +263,13 @@
               <div class="meta">${u.cultDate}${u.durationSeconds ? ' · ' + Math.round(u.durationSeconds / 60) + ' min' : ''}</div>
             </div>
             <span class="status-pill ${u.ready ? 'ready' : 'pending'}">${u.ready ? t("statusReady") : t("statusPending")}</span>
+            ${!u.ready ? `<button class="edit-btn" data-mark-ready="${u.id}">${t("markReadyBtn")}</button>` : ""}
             <button class="edit-btn" data-id="${u.id}">${t("correctBtn")}</button>
           </div>
           <div class="edit-form" id="edit-${u.id}">
             <input type="text" placeholder="${t("titlePlaceholder")}" value="${u.title}" id="edit-title-${u.id}" />
             <input type="date" value="${u.cultDate}" id="edit-date-${u.id}" />
+            <input type="number" min="1" placeholder="${t("durationPlaceholder")}" value="${u.durationSeconds ? Math.round(u.durationSeconds / 60) : ""}" id="edit-duration-${u.id}" />
             <div class="row">
               <button data-save="${u.id}">${t("saveBtn")}</button>
               <button data-cancel="${u.id}" style="background:var(--border); color:var(--text)">${t("cancelBtn")}</button>
@@ -271,8 +277,17 @@
           </div>
         `).join("");
 
-        uploadsListEl.querySelectorAll(".edit-btn").forEach((btn) => btn.addEventListener("click", () => {
+        uploadsListEl.querySelectorAll(".edit-btn[data-id]").forEach((btn) => btn.addEventListener("click", () => {
           document.getElementById(`edit-${btn.dataset.id}`).classList.toggle("open");
+        }));
+        uploadsListEl.querySelectorAll("[data-mark-ready]").forEach((btn) => btn.addEventListener("click", async () => {
+          try {
+            await fetch("/.netlify/functions/update-upload", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: btn.dataset.markReady, ready: true }),
+            });
+            loadUploads();
+          } catch { alert(t("saveError")); }
         }));
         uploadsListEl.querySelectorAll("[data-cancel]").forEach((btn) => btn.addEventListener("click", () => {
           document.getElementById(`edit-${btn.dataset.cancel}`).classList.remove("open");
@@ -281,10 +296,14 @@
           const id = btn.dataset.save;
           const newTitle = document.getElementById(`edit-title-${id}`).value.trim();
           const newDate = document.getElementById(`edit-date-${id}`).value;
+          const newDurationMin = parseFloat(document.getElementById(`edit-duration-${id}`).value);
           try {
             await fetch("/.netlify/functions/update-upload", {
               method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id, title: newTitle, cultDate: newDate }),
+              body: JSON.stringify({
+                id, title: newTitle, cultDate: newDate,
+                durationSeconds: newDurationMin > 0 ? Math.round(newDurationMin * 60) : undefined,
+              }),
             });
             loadUploads();
           } catch { alert(t("saveError")); }
@@ -365,14 +384,16 @@
         let uploadBlob = file;
         let usedExtension = currentExtension();
         let compressionFailed = false;
+        let compressionErrorMsg = "";
         try {
           uploadBlob = await compressAudio(file, (pct) => {
             progressFill.style.width = `${Math.round(pct * 0.5)}%`; // la compression occupe la première moitié de la barre
           });
           usedExtension = "mp3";
         } catch (compressErr) {
-          console.warn("Compression impossible, envoi du fichier original :", compressErr.message);
           compressionFailed = true;
+          compressionErrorMsg = compressErr.message || String(compressErr);
+          console.warn("Compression impossible, envoi du fichier original :", compressionErrorMsg);
         }
         statusEl.textContent = "";
 
@@ -407,17 +428,24 @@
 
         progressFill.style.width = "97%";
 
-        await fetch("/.netlify/functions/confirm-upload", {
+        const confirmRes = await fetch("/.netlify/functions/confirm-upload", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key: data.key, durationSeconds: originalDuration }),
         });
+        let confirmOk = confirmRes.ok;
+        if (!confirmRes.ok) {
+          const confirmData = await confirmRes.json().catch(() => ({}));
+          console.error("confirm-upload a échoué :", confirmRes.status, confirmData.error);
+        }
 
         const savedPct = compressionFailed ? 0 : Math.round((1 - uploadBlob.size / file.size) * 100);
         progressFill.style.width = "100%";
-        statusEl.textContent = compressionFailed
-          ? `✅ Message déposé avec succès (envoyé sans compression — fichier trop volumineux pour être traité par le navigateur) : ${data.key}`
-          : `✅ Message déposé avec succès (compression : -${Math.max(0, savedPct)}% de poids) : ${data.key}`;
+        const compressionNote = compressionFailed
+          ? ` (envoyé sans compression — ${compressionErrorMsg})`
+          : ` (compression : -${Math.max(0, savedPct)}% de poids)`;
+        const confirmNote = confirmOk ? "" : " ⚠️ La confirmation finale a échoué — utilise \"Marquer comme prêt\" ci-dessous si besoin.";
+        statusEl.textContent = `✅ Message déposé avec succès${compressionNote} : ${data.key}${confirmNote}`;
         statusEl.className = "status-ok";
         fileEl.value = "";
         titleEl.value = "";

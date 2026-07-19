@@ -545,8 +545,9 @@ async function renderAudioPlayer() {
   if (!m) { navigate("home"); return; }
   const p = getPreacher(m.preacherId);
 
-  document.getElementById("audioPlayerCover").innerHTML = "";
-  document.getElementById("audioPlayerCover").outerHTML = audioCoverHTML(p ? p.name : "", "large").replace('class="audio-cover audio-cover-large"', 'class="audio-cover audio-cover-large" id="audioPlayerCover"');
+  const coverEl = document.getElementById("audioPlayerCover");
+  coverEl.className = "audio-cover audio-cover-large";
+  coverEl.innerHTML = `<span style="font-size:clamp(20px,6vw,32px); padding:24px">${escapeHtml(p ? p.name : "")}</span>`;
   document.getElementById("audioPlayerTitle").textContent = formatTitle(m.title);
   document.getElementById("audioPlayerPreacher").textContent = p ? p.name : "";
 
@@ -596,11 +597,36 @@ async function renderAudioPlayer() {
     audio.play().catch(() => {});
     recordHistory(m.id);
   };
-  scrubTrack.onclick = (e) => {
+  // Glisser-déposer pour chercher un moment précis — un simple tap ne suffit
+  // pas sur un fichier de plusieurs heures (chaque pixel représenterait
+  // plusieurs dizaines de secondes).
+  let isDragging = false;
+  function seekRatioFromEvent(e) {
     const rect = scrubTrack.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    if (audio.duration) audio.currentTime = ratio * audio.duration;
-  };
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  }
+  function startDrag(e) {
+    isDragging = true;
+    updateDragPreview(e);
+  }
+  function updateDragPreview(e) {
+    if (!audio.duration) return;
+    const ratio = seekRatioFromEvent(e);
+    scrubFill.style.width = `${ratio * 100}%`;
+    elapsedEl.textContent = formatSeconds(ratio * audio.duration);
+  }
+  function endDrag(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    if (audio.duration) audio.currentTime = seekRatioFromEvent(e) * audio.duration;
+  }
+  scrubTrack.addEventListener("mousedown", startDrag);
+  scrubTrack.addEventListener("touchstart", startDrag, { passive: true });
+  document.addEventListener("mousemove", (e) => { if (isDragging) updateDragPreview(e); });
+  document.addEventListener("touchmove", (e) => { if (isDragging) updateDragPreview(e); }, { passive: true });
+  document.addEventListener("mouseup", endDrag);
+  document.addEventListener("touchend", endDrag);
   document.getElementById("audioSkipBack").onclick = () => { audio.currentTime = Math.max(0, audio.currentTime - 15); };
   document.getElementById("audioSkipFwd").onclick = () => { audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 15); };
 
