@@ -34,9 +34,9 @@
     <div class="side-brand"><img src="assets/logo-1v.png" alt="" style="width:26px;height:26px;border-radius:6px" />One Voice</div>
     <nav class="side-nav" id="sideNav">
       <button class="side-link active" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span data-i18n="nav.home">Accueil</span></button>
-      <button class="side-link" data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span data-i18n="nav.search">Recherche</span></button>
       <button class="side-link" data-nav="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span data-i18n="nav.live">Direct</span></button>
       <button class="side-link" data-nav="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4c2-.3 3.7.7 4.5 2.2C10.8 4.7 12.5 3.7 14.5 4 18 4.5 19.5 8 17.5 12 15 16.5 12 21 12 21z"/></svg><span data-i18n="nav.favorites">Favoris</span></button>
+      <button class="side-link" data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span data-i18n="nav.search">Recherche</span></button>
       <button class="side-link" data-nav="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span data-i18n="nav.profile">Profil</span></button>
     </nav>
   </aside>
@@ -134,6 +134,20 @@
       </div>
     </section>
 
+    <!-- ============ FICHE PRÉDICATEUR (parcours Audio) ============ -->
+    <section class="view" id="view-audio-preacher">
+      <div class="container">
+        <div class="back-row"><button class="icon-btn" data-back="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button></div>
+        <div class="preacher-hero">
+          <div class="avatar" id="audioPreacherAvatar" style="width:110px;height:110px;font-size:30px;margin:0 auto 16px"></div>
+          <h1 id="audioPreacherName"></h1>
+          <div class="meta" id="audioPreacherMeta"></div>
+        </div>
+        <div class="section-title" id="audioPreacherMessagesTitle"></div>
+        <div id="audioPreacherMessages"></div>
+      </div>
+    </section>
+
     <!-- ============ LECTEUR ============ -->
     <section class="view" id="view-player">
       <div class="container">
@@ -179,6 +193,7 @@
         <audio id="audioPlayerEl" preload="metadata" style="display:none"></audio>
         <div class="player-title" id="audioPlayerTitle"></div>
         <div class="player-preacher" id="audioPlayerPreacher"></div>
+        <div class="player-date" id="audioPlayerDate"></div>
 
         <div class="scrub" id="audioScrubTrack"><div class="scrub-fill" id="audioScrubFill"></div></div>
         <div class="time-row"><span id="audioTimeElapsed">0:00</span><span id="audioTimeTotal">0:00</span></div>
@@ -345,11 +360,21 @@
 <div id="ytApiHost" style="display:none"></div>
 <div class="share-toast" id="shareToast"></div>
 
+<div class="mini-player" id="miniPlayer" style="display:none">
+  <div class="mini-player-cover" id="miniPlayerCover"></div>
+  <div class="mini-player-info">
+    <div class="mini-player-title" id="miniPlayerTitle"></div>
+    <div class="mini-player-preacher" id="miniPlayerPreacher"></div>
+  </div>
+  <button class="mini-player-playpause" id="miniPlayerPlayPause"></button>
+  <button class="mini-player-close" id="miniPlayerClose">✕</button>
+</div>
+
 <nav class="bottom-nav" id="bottomNav">
   <button data-nav="home" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg><span data-i18n="nav.home">Accueil</span></button>
-  <button data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span data-i18n="nav.search">Recherche</span></button>
   <button data-nav="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span data-i18n="nav.live">Direct</span></button>
   <button data-nav="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4c2-.3 3.7.7 4.5 2.2C10.8 4.7 12.5 3.7 14.5 4 18 4.5 19.5 8 17.5 12 15 16.5 12 21 12 21z"/></svg><span data-i18n="nav.favorites">Favoris</span></button>
+  <button data-nav="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span data-i18n="nav.search">Recherche</span></button>
   <button data-nav="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span data-i18n="nav.profile">Profil</span></button>
 </nav>
 

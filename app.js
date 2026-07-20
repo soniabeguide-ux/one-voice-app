@@ -195,6 +195,8 @@ const state = {
   sortMode: "recent", // 'recent' | 'recommended'
   currentMessage: null,
   playerMode: "video",
+  nowPlayingType: null, // 'video' | 'audio' | null
+  nowPlayingMessage: null,
   sleepTimerId: null,
   sleepTimerEndsAt: null,
   languageReturnView: "home",
@@ -221,14 +223,27 @@ function allMessages({ includeAllTypes = false } = {}) {
 }
 function getPreacher(id) { return PREACHERS.find((p) => p.id === id); }
 
-// Pochette audio : pas de vraie photo disponible pour l'instant, donc on affiche
-// le nom du prédicateur sur un fond dégradé — lisible, distinctif, sans dépendre
-// d'images qui n'existent pas encore.
+const KNOWN_TITLES = ["Dr", "Apôtre", "Apostle", "Pasteur", "Pastor", "Évangéliste", "Evangelist", "Prophète", "Prophet"];
+function splitPreacherTitle(fullName) {
+  const words = (fullName || "").split(" ");
+  if (words.length > 1 && KNOWN_TITLES.includes(words[0])) {
+    return { title: words[0], name: words.slice(1).join(" ") };
+  }
+  return { title: "", name: fullName || "" };
+}
+
+// Pochette audio : pas de vraie photo disponible, donc un modèle à deux lignes —
+// le titre (Dr/Apôtre/Pasteur...) en haut, le nom en dessous, comme le gabarit fourni.
 function audioCoverHTML(preacherName, size = "small") {
-  const fontSize = size === "large" ? "clamp(20px,6vw,32px)" : "13px";
-  const padding = size === "large" ? "24px" : "10px";
+  const { title, name } = splitPreacherTitle(preacherName);
+  const titleSize = size === "large" ? "clamp(14px,3.2vw,18px)" : "9px";
+  const nameSize = size === "large" ? "clamp(20px,5.5vw,30px)" : "13px";
   return `<div class="audio-cover audio-cover-${size}">
-    <span style="font-size:${fontSize}; padding:${padding}">${escapeHtml(preacherName)}</span>
+    <div class="audio-cover-inner">
+      ${title ? `<div class="audio-cover-title" style="font-size:${titleSize}">${escapeHtml(title)}</div>` : ""}
+      <div class="audio-cover-name" style="font-size:${nameSize}">${escapeHtml(name)}</div>
+      <div class="audio-cover-rule"></div>
+    </div>
   </div>`;
 }
 function getMessageById(id) { return allMessages({ includeAllTypes: true }).find((m) => m.id === id); }
@@ -354,6 +369,7 @@ function showView(name, { push = true } = {}) {
   updateChromeVisibility(name);
   window.scrollTo(0, 0);
   RENDERERS[name] && RENDERERS[name]();
+  refreshMiniPlayer();
 }
 function navigate(name) { showView(name); }
 function goBackTo(target) {
@@ -498,7 +514,7 @@ async function renderAudioHome() {
       ${audioCoverHTML(fp ? fp.name : "", "small").replace('audio-cover-small', 'audio-cover-small" style="width:100%;height:100%;border-radius:0')}
       <div class="scrim">
         <div class="title">${escapeHtml(formatTitle(featured.title))}</div>
-        <div class="meta">${escapeHtml(fp ? fp.name : "")} · ${formatMessageDate(featured.cultDate)}${featured.durationSeconds ? " · " + Math.round(featured.durationSeconds / 60) + " min" : ""}</div>
+        <div class="meta">${escapeHtml(fp ? fp.name : "")} · ${formatMessageDate(featured.cultDate)}${featured.durationSeconds ? " · " + formatDuration(featured.durationSeconds) : ""}</div>
       </div>
     </div>`;
   document.querySelector("#homeFeatured .featured").addEventListener("click", () => openAudioPlayer(featured));
@@ -544,12 +560,21 @@ async function renderAudioPlayer() {
   const m = state.currentAudioMessage;
   if (!m) { navigate("home"); return; }
   const p = getPreacher(m.preacherId);
+  state.nowPlayingType = "audio";
+  state.nowPlayingMessage = m;
 
   const coverEl = document.getElementById("audioPlayerCover");
+  const { title: pTitle, name: pName } = splitPreacherTitle(p ? p.name : "");
   coverEl.className = "audio-cover audio-cover-large";
-  coverEl.innerHTML = `<span style="font-size:clamp(20px,6vw,32px); padding:24px">${escapeHtml(p ? p.name : "")}</span>`;
+  coverEl.innerHTML = `<div class="audio-cover-inner">
+    ${pTitle ? `<div class="audio-cover-title" style="font-size:clamp(14px,3.2vw,18px)">${escapeHtml(pTitle)}</div>` : ""}
+    <div class="audio-cover-name" style="font-size:clamp(20px,5.5vw,30px)">${escapeHtml(pName)}</div>
+    <div class="audio-cover-rule"></div>
+  </div>`;
   document.getElementById("audioPlayerTitle").textContent = formatTitle(m.title);
   document.getElementById("audioPlayerPreacher").textContent = p ? p.name : "";
+  const dateEl = document.getElementById("audioPlayerDate");
+  if (dateEl) dateEl.textContent = m.cultDate ? formatMessageDate(m.cultDate) : "";
 
   const audio = document.getElementById("audioPlayerEl");
   audio.src = m.audioUrl || "";
@@ -581,7 +606,8 @@ async function renderAudioPlayer() {
       : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>';
   }
   playBtn.onclick = () => { audio.paused ? audio.play() : audio.pause(); };
-  audio.onplay = refreshPlayIcon; audio.onpause = refreshPlayIcon;
+  audio.onplay = () => { refreshPlayIcon(); refreshMiniPlayer(); };
+  audio.onpause = () => { refreshPlayIcon(); refreshMiniPlayer(); };
   audio.ontimeupdate = () => {
     const dur = audio.duration || 0, cur = audio.currentTime || 0;
     scrubFill.style.width = dur ? `${(cur / dur) * 100}%` : "0%";
@@ -654,7 +680,43 @@ async function renderAudioPlayer() {
   document.getElementById("audioPlayerSleepTimer").onclick = openSleepTimerMenu;
 }
 
+async function renderAudioPreacher() {
+  const p = getPreacher(currentPreacherId);
+  if (!p) return;
+  document.getElementById("audioPreacherAvatar").textContent = initials(p.name);
+  document.getElementById("audioPreacherName").textContent = p.name;
+  document.getElementById("audioPreacherMeta").textContent = `${p.country} · ${p.ministry}`;
+
+  const container = document.getElementById("audioPreacherMessages");
+  container.innerHTML = `<div class="empty-state">${t("live.checking")}</div>`;
+
+  const audioMsgs = (await fetchAudioMessages())
+    .filter((m) => m.preacherId === p.id)
+    .sort((a, b) => new Date(b.cultDate) - new Date(a.cultDate));
+
+  document.getElementById("audioPreacherMessagesTitle").textContent = t("preacher.messages", { n: audioMsgs.length });
+
+  if (audioMsgs.length === 0) {
+    container.innerHTML = `<div class="empty-state">${t("home.audioEmpty")}</div>`;
+    return;
+  }
+
+  container.innerHTML = audioMsgs.map((m) => `
+    <div class="message-row" data-mid="${m.id}">
+      <div style="width:76px; height:76px; flex-shrink:0">${audioCoverHTML(p.name, "small")}</div>
+      <div class="info">
+        <div class="title">${escapeHtml(formatTitle(m.title))}</div>
+        <div class="meta">${formatMessageDate(m.cultDate)}${m.durationSeconds ? " · " + formatDuration(m.durationSeconds) : ""}</div>
+      </div>
+    </div>`).join("");
+  container.querySelectorAll(".message-row").forEach((el) => el.addEventListener("click", () => {
+    const m = audioMsgs.find((x) => x.id === el.dataset.mid);
+    if (m) openAudioPlayer(m);
+  }));
+}
+
 function renderHomePreacherTabs() {
+
   document.getElementById("tabFr").classList.toggle("active", state.langTab === "fr");
   document.getElementById("tabEn").classList.toggle("active", state.langTab === "en");
   const list = PREACHERS.filter((p) => p.language === state.langTab);
@@ -799,7 +861,11 @@ function bindMessageRows(container) {
 }
 
 let currentPreacherId = null;
-function openPreacher(id) { currentPreacherId = id; navigate("preacher"); }
+function openPreacher(id) {
+  currentPreacherId = id;
+  if ((localStorage.getItem("ov:pathway") || "video") === "audio") navigate("audio-preacher");
+  else navigate("preacher");
+}
 function renderPreacher() {
   const p = getPreacher(currentPreacherId);
   if (!p) return;
@@ -861,6 +927,8 @@ function renderPlayer() {
   const m = state.currentMessage;
   if (!m) return;
   const p = getPreacher(m.preacherId);
+  state.nowPlayingType = "video";
+  state.nowPlayingMessage = m;
 
   document.getElementById("playerTitle").textContent = formatTitle(m.title);
   document.getElementById("playerTitle").onclick = () => openPreacher(m.preacherId);
@@ -998,6 +1066,59 @@ function clearSleepTimer() {
   refreshSleepTimerButton();
 }
 
+function refreshMiniPlayer() {
+  const bar = document.getElementById("miniPlayer");
+  const onPlayerScreen = state.currentView === "player" || state.currentView === "audio-player";
+  const hasNowPlaying = state.nowPlayingType && state.nowPlayingMessage;
+
+  if (!hasNowPlaying || onPlayerScreen || ONBOARDING_VIEWS.has(state.currentView)) {
+    bar.style.display = "none";
+    return;
+  }
+  bar.style.display = "flex";
+  const m = state.nowPlayingMessage;
+  const p = getPreacher(m.preacherId);
+  document.getElementById("miniPlayerTitle").textContent = formatTitle(m.title);
+  document.getElementById("miniPlayerPreacher").textContent = p ? p.name : "";
+  const coverEl = document.getElementById("miniPlayerCover");
+  coverEl.innerHTML = state.nowPlayingType === "audio"
+    ? `<div style="width:100%;height:100%;background:linear-gradient(135deg,var(--accent),var(--accent2))"></div>`
+    : `<img src="${thumbUrl(m.videoId)}" alt="" />`;
+
+  const playBtn = document.getElementById("miniPlayerPlayPause");
+  const audioEl = document.getElementById("audioPlayerEl");
+  const isPlaying = state.nowPlayingType === "audio"
+    ? (audioEl && !audioEl.paused)
+    : (ytPlayer && typeof ytPlayer.getPlayerState === "function" && ytPlayer.getPlayerState() === 1);
+  playBtn.innerHTML = isPlaying
+    ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>';
+}
+function setupMiniPlayer() {
+  document.getElementById("miniPlayer").addEventListener("click", (e) => {
+    if (e.target.closest("#miniPlayerPlayPause") || e.target.closest("#miniPlayerClose")) return;
+    navigate(state.nowPlayingType === "audio" ? "audio-player" : "player");
+  });
+  document.getElementById("miniPlayerPlayPause").addEventListener("click", () => {
+    if (state.nowPlayingType === "audio") {
+      const audio = document.getElementById("audioPlayerEl");
+      audio.paused ? audio.play() : audio.pause();
+    } else if (ytPlayer && typeof ytPlayer.getPlayerState === "function") {
+      ytPlayer.getPlayerState() === 1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+    }
+    setTimeout(refreshMiniPlayer, 200);
+  });
+  document.getElementById("miniPlayerClose").addEventListener("click", () => {
+    if (state.nowPlayingType === "audio") { const a = document.getElementById("audioPlayerEl"); a.pause(); a.src = ""; }
+    else if (ytPlayer && typeof ytPlayer.stopVideo === "function") ytPlayer.stopVideo();
+    state.nowPlayingType = null;
+    state.nowPlayingMessage = null;
+    refreshMiniPlayer();
+  });
+  // Rafraîchit l'icône lecture/pause régulièrement pendant qu'on navigue ailleurs
+  setInterval(refreshMiniPlayer, 3000);
+}
+
 function applyPlayerMode() {
   const cover = document.getElementById("playerCover");
   const fallback = document.getElementById("coverFallback");
@@ -1006,6 +1127,11 @@ function applyPlayerMode() {
 }
 
 function formatSeconds(s) { s = Math.floor(s || 0); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`; }
+function formatDuration(seconds) {
+  const totalMin = Math.round((seconds || 0) / 60);
+  const h = Math.floor(totalMin / 60), m = totalMin % 60;
+  return h > 0 ? `${h}h${m.toString().padStart(2, "0")}` : `${m} min`;
+}
 
 function quickAddToPlaylist(messageId) {
   const playlists = getPlaylists();
@@ -1291,7 +1417,7 @@ const RENDERERS = {
   home: renderHome, search: renderSearch, preacher: renderPreacher, player: renderPlayer, series: renderSeries,
   playlists: renderPlaylists, "playlist-create": renderPlaylistCreate, "playlist-detail": renderPlaylistDetail,
   favorites: renderFavorites, profile: renderProfile, "onboarding": renderOnboardingLanguage, live: renderLive,
-  "audio-player": renderAudioPlayer,
+  "audio-player": renderAudioPlayer, "audio-preacher": renderAudioPreacher,
 };
 
 // Sur desktop, les rails horizontaux n'avaient aucun moyen d'aller au-delà
@@ -1339,6 +1465,7 @@ function init() {
   refreshTheme();
   setupThemeToggle("themeToggle");
   setupAppearanceSwitch();
+  setupMiniPlayer();
   setInterval(() => { if ((localStorage.getItem(LS.theme) || "auto") === "auto") refreshTheme(); }, 15 * 60 * 1000);
   setInterval(() => { if (state.currentView === "home") document.getElementById("greetingText").textContent = computeGreeting(); }, 5 * 60 * 1000);
 
