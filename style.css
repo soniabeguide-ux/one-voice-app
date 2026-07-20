@@ -59,6 +59,12 @@ svg{display:block}
 .side-link svg{width:18px; height:18px; flex-shrink:0}
 .main{flex:1; min-width:0}
 .container{max-width:640px; margin:0 auto; padding:0 var(--sp-md)}
+.player-screen{
+  height:calc(100dvh - 70px - env(safe-area-inset-bottom)); display:flex; flex-direction:column; justify-content:space-between;
+  padding-top:0; padding-bottom:8px;
+  gap:2px; overflow:hidden;
+}
+.player-cover-flex{flex:1 1 auto; min-height:0; max-height:38vh; width:auto; aspect-ratio:1; margin:0 auto}
 
 h1,h2,h3{margin:0}
 .kicker{font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--accent)}

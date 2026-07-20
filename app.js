@@ -1126,7 +1126,13 @@ function applyPlayerMode() {
   if (fallback) fallback.style.display = state.playerMode === "audio" ? "block" : "none";
 }
 
-function formatSeconds(s) { s = Math.floor(s || 0); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`; }
+function formatSeconds(s) {
+  s = Math.floor(s || 0);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return h > 0
+    ? `${h}:${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`
+    : `${m}:${sec.toString().padStart(2, "0")}`;
+}
 function formatDuration(seconds) {
   const totalMin = Math.round((seconds || 0) / 60);
   const h = Math.floor(totalMin / 60), m = totalMin % 60;
