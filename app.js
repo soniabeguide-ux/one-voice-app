@@ -234,11 +234,11 @@ function splitPreacherTitle(fullName) {
 
 // Pochette audio : pas de vraie photo disponible, donc un modèle à deux lignes —
 // le titre (Dr/Apôtre/Pasteur...) en haut, le nom en dessous, comme le gabarit fourni.
-function audioCoverHTML(preacherName, size = "small") {
+function audioCoverHTML(preacherName, size = "small", extraStyle = "") {
   const { title, name } = splitPreacherTitle(preacherName);
   const titleSize = size === "large" ? "clamp(14px,3.2vw,18px)" : "9px";
   const nameSize = size === "large" ? "clamp(20px,5.5vw,30px)" : "13px";
-  return `<div class="audio-cover audio-cover-${size}">
+  return `<div class="audio-cover audio-cover-${size}" style="${extraStyle}">
     <div class="audio-cover-inner">
       ${title ? `<div class="audio-cover-title" style="font-size:${titleSize}">${escapeHtml(title)}</div>` : ""}
       <div class="audio-cover-name" style="font-size:${nameSize}">${escapeHtml(name)}</div>
@@ -510,8 +510,8 @@ async function renderAudioHome() {
   const fp = getPreacher(featured.preacherId);
   document.getElementById("homeFeatured").innerHTML = `
     <div class="section-title">${t("home.featured")}</div>
-    <div class="featured" data-mid="${featured.id}" style="display:flex; align-items:stretch">
-      ${audioCoverHTML(fp ? fp.name : "", "small").replace('audio-cover-small', 'audio-cover-small" style="width:100%;height:100%;border-radius:0')}
+    <div class="featured" data-mid="${featured.id}">
+      ${audioCoverHTML(fp ? fp.name : "", "small", "position:absolute; inset:0; width:100%; height:100%; border-radius:0")}
       <div class="scrim">
         <div class="title">${escapeHtml(formatTitle(featured.title))}</div>
         <div class="meta">${escapeHtml(fp ? fp.name : "")} · ${formatMessageDate(featured.cultDate)}${featured.durationSeconds ? " · " + formatDuration(featured.durationSeconds) : ""}</div>
