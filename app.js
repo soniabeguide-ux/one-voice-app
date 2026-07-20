@@ -1082,7 +1082,7 @@ function refreshMiniPlayer() {
   document.getElementById("miniPlayerPreacher").textContent = p ? p.name : "";
   const coverEl = document.getElementById("miniPlayerCover");
   coverEl.innerHTML = state.nowPlayingType === "audio"
-    ? `<div style="width:100%;height:100%;background:linear-gradient(135deg,var(--accent),var(--accent2))"></div>`
+    ? `<div style="width:100%;height:100%;background:linear-gradient(135deg,var(--accent),var(--accent-2))"></div>`
     : `<img src="${thumbUrl(m.videoId)}" alt="" />`;
 
   const playBtn = document.getElementById("miniPlayerPlayPause");
