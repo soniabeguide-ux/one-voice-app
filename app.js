@@ -354,7 +354,12 @@ function applyCoverToElement(el, preacherName, size, coverUrl) {
     <div class="audio-cover-rule"></div>
   </div>`;
 }
-function getMessageById(id) { return allMessages({ includeAllTypes: true }).find((m) => m.id === id); }
+function getMessageById(id) {
+  const videoMatch = allMessages({ includeAllTypes: true }).find((m) => m.id === id);
+  if (videoMatch) return videoMatch;
+  // Les messages audio sont chargés à part (Cloudflare) — on les cherche dans le cache déjà récupéré
+  return (audioMessagesCache || []).find((m) => m.id === id);
+}
 function thumbUrl(videoId) { return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`; }
 function initials(name) {
   return name.replace(/^(Dr|Apôtre|Apostle|Pastor|Évangéliste|Evangéliste)\s+/i, "")
@@ -837,12 +842,18 @@ async function renderAudioPlayer() {
   refreshFav();
   favBtn.onclick = () => { toggleFavorite(m.id); refreshFav(); };
 
+  const plBtn = document.getElementById("audioPlayerPlaylist");
+  plBtn.innerHTML = ICONS.playlist + `<span>${t("player.playlist")}</span>`;
+  plBtn.onclick = () => quickAddToPlaylist(m.id);
+
   const dlBtn = document.getElementById("audioPlayerDownload");
   dlBtn.innerHTML = ICONS.link + `<span>${t("audioPlayer.download")}</span>`;
   dlBtn.onclick = () => { if (m.audioUrl) window.open(m.audioUrl, "_blank"); };
 
   refreshSleepTimerButton();
   document.getElementById("audioPlayerSleepTimer").onclick = openSleepTimerMenu;
+
+  renderShareRow(m, p, "audioShareRow");
 }
 
 async function renderAudioPreacher() {
@@ -997,13 +1008,22 @@ function formatMessageDate(iso) {
 }
 function messageRowHTML(m, { checkbox = false } = {}) {
   const p = getPreacher(m.preacherId);
+  const isAudio = "audioUrl" in m;
+  const thumbHtml = isAudio
+    ? `<div class="thumb-audio">${audioCoverHTML(p ? p.name : "", "small", "", m.coverUrl)}</div>`
+    : `<img class="thumb" src="${thumbUrl(m.videoId)}" alt="" loading="lazy" />`;
+  const metaLine = isAudio
+    ? `${escapeHtml(p ? p.name : "")}${m.durationSeconds ? " · " + formatDuration(m.durationSeconds) : ""}`
+    : `${escapeHtml(p.name)} · ${escapeHtml(themeLabel(m.theme))}`;
+  const dateLine = isAudio ? formatMessageDate(m.cultDate) : formatMessageDate(m.publishedAt);
+
   return `<div class="message-row" data-mid="${m.id}">
     ${checkbox ? `<div class="checkbox" data-check="${m.id}"></div>` : ""}
-    <img class="thumb" src="${thumbUrl(m.videoId)}" alt="" loading="lazy" />
+    ${thumbHtml}
     <div class="info">
       <div class="title">${escapeHtml(formatTitle(m.title))}</div>
-      <div class="meta">${escapeHtml(p.name)} · ${escapeHtml(themeLabel(m.theme))}</div>
-      <div class="date">${formatMessageDate(m.publishedAt)}</div>
+      <div class="meta">${metaLine}</div>
+      <div class="date">${dateLine}</div>
     </div>
     ${!checkbox ? `<button class="fav-btn" data-fav="${m.id}">${isFavorite(m.id) ? ICONS.heartFilled : ICONS.heartOutline}</button>` : ""}
   </div>`;
@@ -1012,7 +1032,9 @@ function bindMessageRows(container) {
   container.querySelectorAll(".message-row").forEach((row) => {
     row.addEventListener("click", (e) => {
       if (e.target.closest(".fav-btn") || e.target.closest("[data-check]")) return;
-      openPlayer(getMessageById(row.dataset.mid));
+      const m = getMessageById(row.dataset.mid);
+      if (!m) return;
+      "audioUrl" in m ? openAudioPlayer(m) : openPlayer(m);
     });
   });
   container.querySelectorAll(".fav-btn").forEach((btn) => {
@@ -1200,6 +1222,7 @@ function renderPlayer() {
 
   if (!ytPlayer) {
     ytPlayer = new YT.Player("ytPlayerTarget", {
+      width: "100%", height: "100%",
       videoId: m.videoId,
       playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1 },
       events: {
@@ -1392,10 +1415,10 @@ function shareUrlFor(message) {
 function shareTextFor(message, preacher) {
   return t("share.text", { title: formatTitle(message.title), preacher: preacher.name });
 }
-function renderShareRow(message, preacher) {
+function renderShareRow(message, preacher, containerId = "shareRow") {
   const url = shareUrlFor(message);
   const text = shareTextFor(message, preacher);
-  const row = document.getElementById("shareRow");
+  const row = document.getElementById(containerId);
 
   const links = [
     { icon: ICONS.whatsapp, href: `https://wa.me/?text=${encodeURIComponent(text + " " + url)}` },
@@ -1403,11 +1426,12 @@ function renderShareRow(message, preacher) {
     { icon: ICONS.xTwitter, href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}` },
     { icon: ICONS.telegram, href: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}` },
   ];
+  const copyBtnId = containerId + "CopyBtn";
 
   row.innerHTML = links.map((l) => `<a class="share-btn" href="${l.href}" target="_blank" rel="noopener" title="${t("player.share")}">${l.icon}</a>`).join("")
-    + `<button class="share-btn" id="shareCopyBtn" title="${t("player.share")}">${ICONS.link}</button>`;
+    + `<button class="share-btn" id="${copyBtnId}" title="${t("player.share")}">${ICONS.link}</button>`;
 
-  document.getElementById("shareCopyBtn").addEventListener("click", async () => {
+  document.getElementById(copyBtnId).addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(`${text} ${url}`); showToast(t("share.copied")); }
     catch { showToast(t("share.copyFailed")); }
   });

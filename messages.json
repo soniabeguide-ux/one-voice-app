@@ -109758,5 +109758,65 @@
     "publishedAt": "2026-07-21T11:49:01Z",
     "durationSeconds": 7,
     "contentType": "autre"
+  },
+  {
+    "id": "m-mamadou-karambiri-krVtnkjYjaE",
+    "preacherId": "mamadou-karambiri",
+    "videoId": "krVtnkjYjaE",
+    "title": "JOURNAL DU 21/07/2026",
+    "theme": "Foi",
+    "publishedAt": "2026-07-21T13:35:58Z",
+    "durationSeconds": 588,
+    "contentType": "autre"
+  },
+  {
+    "id": "m-mamadou-karambiri-2hum8yR023s",
+    "preacherId": "mamadou-karambiri",
+    "videoId": "2hum8yR023s",
+    "title": "PRIONS ENSEMBLE DU 20/07/2026 |  Dr Hortense KARAMBIRI",
+    "theme": "Foi",
+    "publishedAt": "2026-07-21T15:51:12Z",
+    "durationSeconds": 1819,
+    "contentType": "predication"
+  },
+  {
+    "id": "m-mamadou-karambiri-6YNiJwbKbzA",
+    "preacherId": "mamadou-karambiri",
+    "videoId": "6YNiJwbKbzA",
+    "title": "PRIONS ENSEMBLE DU 21/07/2026 I Pasteur Pierre Damien YELEMOU",
+    "theme": "Foi",
+    "publishedAt": "2026-07-21T15:57:24Z",
+    "durationSeconds": 1676,
+    "contentType": "autre"
+  },
+  {
+    "id": "m-mamadou-karambiri-xKJhsv6wYPY",
+    "preacherId": "mamadou-karambiri",
+    "videoId": "xKJhsv6wYPY",
+    "title": "Untitled",
+    "theme": "Foi",
+    "publishedAt": "2026-07-21T17:33:23Z",
+    "durationSeconds": 51,
+    "contentType": "autre"
+  },
+  {
+    "id": "m-mohammed-sanogo-tig4BcdH8Ho",
+    "preacherId": "mohammed-sanogo",
+    "videoId": "tig4BcdH8Ho",
+    "title": "LA RAISON POUR LAQUELLE DIEU VEUT TE FAIRE BRILLER",
+    "theme": "Foi",
+    "publishedAt": "2026-07-21T18:39:05Z",
+    "durationSeconds": 322,
+    "contentType": "autre"
+  },
+  {
+    "id": "m-mamadou-karambiri-ZEhFix5jQ-c",
+    "preacherId": "mamadou-karambiri",
+    "videoId": "ZEhFix5jQ-c",
+    "title": "Eglise local en prière du 21/07/2026 | GPS NION Sylvain",
+    "theme": "Prière",
+    "publishedAt": "2026-07-21T19:08:02Z",
+    "durationSeconds": 0,
+    "contentType": "autre"
   }
 ]

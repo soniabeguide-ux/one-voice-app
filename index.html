@@ -24,7 +24,7 @@
 <meta name="twitter:image" content="assets/icons/icon-512.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -210,9 +210,13 @@
 
         <div class="action-row" style="flex-shrink:0">
           <button class="action-btn" id="audioPlayerFav"></button>
+          <button class="action-btn" id="audioPlayerPlaylist"></button>
           <button class="action-btn" id="audioPlayerDownload"></button>
           <button class="action-btn" id="audioPlayerSleepTimer"></button>
         </div>
+
+        <div class="section-title" style="text-align:center; padding-bottom:0; flex-shrink:0"><span style="padding-bottom:0" data-i18n="player.share">Partager ce message</span></div>
+        <div class="share-row" id="audioShareRow" style="flex-shrink:0"></div>
 
         <div class="bg-note" data-i18n="audioPlayer.note" style="flex-shrink:0">Lecture audio native — continue en fond et écran verrouillé.</div>
       </div>
