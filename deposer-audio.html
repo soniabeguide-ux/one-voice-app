@@ -44,6 +44,14 @@
   .edit-form input{ margin-bottom:8px }
   .edit-form .row{ display:flex; gap:8px }
   .edit-form button{ padding:8px; font-size:13px }
+  .hint-text{ font-size:11.5px; color:var(--muted); margin:-10px 0 16px }
+  .queue-row{ background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px }
+  .queue-row input{ margin-bottom:8px }
+  .queue-row .queue-filename{ font-size:11.5px; color:var(--muted); margin-bottom:8px; word-break:break-all }
+  .queue-row .queue-status{ font-size:12px; margin-top:6px }
+  .queue-row.done{ border-color:var(--accent) }
+  .queue-row.error{ border-color:#e8848a }
+  #coverPreview img{ width:80px; height:80px; object-fit:cover; border-radius:8px; margin:8px 0 16px }
   .lang-switch{ display:flex; gap:8px; justify-content:flex-end; margin-bottom:16px }
   .lang-btn{
     display:flex; align-items:center; gap:7px; background:var(--surface); border:1px solid var(--border);
@@ -97,20 +105,24 @@
 
     <label for="cultDate" data-i18n="cultDateLabel">Date réelle du culte / de l'enregistrement</label>
     <input type="date" id="cultDate" />
+    <div class="hint-text" data-i18n="multiDateHint">Si tu déposes plusieurs cultes différents, ajuste la date pour chacun dans la liste ci-dessous une fois les fichiers choisis.</div>
 
-    <label for="title" data-i18n="titleLabel">Titre du message</label>
-    <input type="text" id="title" placeholder="Ex : Veux-tu vivre libre ?" />
+    <label for="coverImage" data-i18n="coverLabel">Pochette pour ce prédicateur (optionnel — une seule fois, sert pour tous ses audios)</label>
+    <input type="file" id="coverImage" accept="image/png,image/jpeg,image/webp" />
+    <div class="hint-text" data-i18n="coverHint">Facultatif. Sans image, un visuel généré automatiquement avec son nom est utilisé.</div>
+    <div id="coverPreview"></div>
 
-    <label for="file" data-i18n="fileLabel">Fichier audio (MP3 ou M4A)</label>
-    <input type="file" id="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4" />
+    <label for="file" data-i18n="fileLabel">Fichier(s) audio (MP3 ou M4A) — plusieurs à la fois possible</label>
+    <input type="file" id="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4" multiple />
 
-    <div class="preview" id="preview"><span class="placeholder" data-i18n="previewPlaceholder">Le nom final du fichier apparaîtra ici…</span></div>
+    <div id="fileQueue"></div>
 
     <button id="submitBtn" disabled data-i18n="submitBtn">Envoyer sur Cloudflare</button>
 
     <div id="progressWrap">
       <div id="progressBar"><div id="progressFill"></div></div>
     </div>
+    <div id="queueStatus"></div>
     <div id="status"></div>
   </div>
 
@@ -152,6 +164,17 @@
         saveError: "La correction n'a pas pu être enregistrée.",
         preparing: "…",
         compressing: "Compression du fichier en cours…",
+        uploading: "Envoi en cours…",
+        skippedLargeFile: "fichier volumineux, compression non tentée pour aller plus vite",
+        sentNoCompression: "envoyé sans compression",
+        compressed: "compressé",
+        confirmFailed: "confirmation échouée — vérifie dans la liste ci-dessous",
+        processingFile: "Traitement du fichier {n} sur {total}…",
+        batchDone: "{ok} sur {total} message(s) déposé(s) avec succès.",
+        multiDateHint: "Si tu déposes plusieurs cultes différents, ajuste la date pour chacun dans la liste ci-dessous une fois les fichiers choisis.",
+        coverLabel: "Pochette pour ce prédicateur (optionnel — une seule fois, sert pour tous ses audios)",
+        coverHint: "Facultatif. Sans image, un visuel généré automatiquement avec son nom est utilisé.",
+        uploadingCover: "Envoi de la pochette…",
       },
       en: {
         title: "Deposit an audio message",
@@ -183,10 +206,25 @@
         saveError: "The correction couldn't be saved.",
         preparing: "…",
         compressing: "Compressing the file…",
+        uploading: "Uploading…",
+        skippedLargeFile: "large file, compression skipped to go faster",
+        sentNoCompression: "sent without compression",
+        compressed: "compressed",
+        confirmFailed: "confirmation failed — check the list below",
+        processingFile: "Processing file {n} of {total}…",
+        batchDone: "{ok} of {total} message(s) uploaded successfully.",
+        multiDateHint: "If you're depositing several different services, adjust the date for each one in the list below once files are selected.",
+        coverLabel: "Cover for this preacher (optional — once only, used for all their audios)",
+        coverHint: "Optional. Without an image, an automatically generated visual with their name is used.",
+        uploadingCover: "Uploading cover…",
       },
     };
     let currentLang = localStorage.getItem("ov-deposit-lang") || "fr";
-    function t(key) { return (I18N[currentLang] || I18N.fr)[key] || key; }
+    function t(key, vars) {
+      let str = (I18N[currentLang] || I18N.fr)[key] || key;
+      if (vars) Object.entries(vars).forEach(([k, v]) => { str = str.replaceAll(`{${k}}`, v); });
+      return str;
+    }
     function applyLang() {
       document.documentElement.lang = currentLang;
       document.querySelectorAll("[data-i18n]").forEach((el) => { el.innerHTML = t(el.dataset.i18n); });
@@ -199,14 +237,20 @@
     const otherWrap = document.getElementById("otherPreacherWrap");
     const otherNameEl = document.getElementById("otherPreacherName");
     const dateEl = document.getElementById("cultDate");
-    const titleEl = document.getElementById("title");
     const fileEl = document.getElementById("file");
-    const previewEl = document.getElementById("preview");
+    const fileQueueEl = document.getElementById("fileQueue");
     const submitBtn = document.getElementById("submitBtn");
     const statusEl = document.getElementById("status");
+    const queueStatusEl = document.getElementById("queueStatus");
     const progressWrap = document.getElementById("progressWrap");
     const progressFill = document.getElementById("progressFill");
     const uploadsListEl = document.getElementById("uploadsList");
+
+    // Au-delà de cette taille, on ne tente même pas la compression dans le
+    // navigateur : sur les très gros fichiers, la tentative est lente et
+    // échoue souvent — mieux vaut envoyer tel quel tout de suite.
+    const COMPRESSION_SIZE_LIMIT = 60 * 1024 * 1024; // 60 Mo
+    let queue = [];
 
     function formatDuration(seconds) {
       const totalMin = Math.round((seconds || 0) / 60);
@@ -220,34 +264,74 @@
         .replace(/^-+|-+$/g, "")
         .slice(0, 60);
     }
+    function titleFromFilename(name) {
+      return name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ").trim();
+    }
     function currentPreacherId() {
       return preacherEl.value === "__other__" ? slugify(otherNameEl.value.trim()) : preacherEl.value;
     }
-    function currentExtension() {
-      const f = fileEl.files[0];
-      if (!f) return "";
-      return f.name.split(".").pop().toLowerCase();
-    }
-    function updatePreview() {
-      const preacher = currentPreacherId();
-      const date = dateEl.value;
-      const title = titleEl.value.trim();
-      const ext = currentExtension();
-      if (!preacher || !date || !title || !ext) {
-        previewEl.innerHTML = '<span class="placeholder">Le nom final du fichier apparaîtra ici…</span>';
+
+    function renderQueue() {
+      if (queue.length === 0) {
+        fileQueueEl.innerHTML = "";
         submitBtn.disabled = true;
         return;
       }
-      const filename = `${preacher}/${preacher}_${date}_${slugify(title)}.${ext}`;
-      previewEl.textContent = filename;
-      submitBtn.disabled = false;
+      fileQueueEl.innerHTML = queue.map((item, i) => `
+        <div class="queue-row" id="queue-row-${i}">
+          <div class="queue-filename">${item.file.name} — ${(item.file.size / (1024 * 1024)).toFixed(1)} Mo</div>
+          <input type="text" value="${item.title}" data-queue-title="${i}" placeholder="${t('titlePlaceholder')}" />
+          <input type="date" value="${item.date}" data-queue-date="${i}" />
+          <div class="queue-status" id="queue-status-${i}"></div>
+        </div>
+      `).join("");
+      fileQueueEl.querySelectorAll("[data-queue-title]").forEach((el) => el.addEventListener("input", (e) => {
+        queue[+el.dataset.queueTitle].title = e.target.value;
+      }));
+      fileQueueEl.querySelectorAll("[data-queue-date]").forEach((el) => el.addEventListener("input", (e) => {
+        queue[+el.dataset.queueDate].date = e.target.value;
+      }));
+      submitBtn.disabled = !currentPreacherId();
     }
+
+    fileEl.addEventListener("change", () => {
+      const sharedDate = dateEl.value || new Date().toISOString().slice(0, 10);
+      queue = Array.from(fileEl.files).map((file) => ({
+        file, title: titleFromFilename(file.name), date: sharedDate,
+      }));
+      renderQueue();
+    });
+    const coverImageEl = document.getElementById("coverImage");
+    const coverPreviewEl = document.getElementById("coverPreview");
+    coverImageEl.addEventListener("change", () => {
+      const file = coverImageEl.files[0];
+      if (!file) { coverPreviewEl.innerHTML = ""; return; }
+      coverPreviewEl.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="" />`;
+    });
+    async function uploadCoverIfNeeded() {
+      const file = coverImageEl.files[0];
+      if (!file) return;
+      const preacherId = currentPreacherId();
+      if (!preacherId) return;
+      queueStatusEl.textContent = t("uploadingCover");
+      const ext = file.name.split(".").pop().toLowerCase();
+      const res = await fetch("/.netlify/functions/get-cover-upload-url", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preacherId, fileExtension: ext }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur pochette.");
+      await fetch(data.uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+      coverImageEl.value = "";
+      coverPreviewEl.innerHTML = "";
+    }
+
     preacherEl.addEventListener("change", () => {
       otherWrap.style.display = preacherEl.value === "__other__" ? "block" : "none";
-      updatePreview();
+      submitBtn.disabled = queue.length === 0 || !currentPreacherId();
       loadUploads();
     });
-    [dateEl, titleEl, fileEl, otherNameEl].forEach((el) => el.addEventListener("input", updatePreview));
+    otherNameEl.addEventListener("input", () => { submitBtn.disabled = queue.length === 0 || !currentPreacherId(); });
 
     async function loadUploads() {
       const preacherId = currentPreacherId();
@@ -367,100 +451,100 @@
       return new Blob(mp3Chunks, { type: "audio/mpeg" });
     }
 
-    submitBtn.addEventListener("click", async () => {
-      const file = fileEl.files[0];
-      if (!file) return;
+    async function uploadOneItem(item, index) {
       const preacherId = currentPreacherId();
+      const statusRow = document.getElementById(`queue-status-${index}`);
+      const rowEl = document.getElementById(`queue-row-${index}`);
+      const file = item.file;
+      statusRow.textContent = t("compressing");
 
-      submitBtn.disabled = true;
-      statusEl.textContent = "";
-      statusEl.className = "";
-      progressWrap.style.display = "block";
-      progressFill.style.width = "2%";
-      statusEl.textContent = t("compressing");
-      statusEl.className = "";
+      const originalDuration = await getAudioDuration(file);
+      let uploadBlob = file;
+      let usedExtension = file.name.split(".").pop().toLowerCase();
+      let compressionFailed = file.size > COMPRESSION_SIZE_LIMIT; // trop gros : on ne tente même pas, pour aller plus vite
+      let compressionErrorMsg = compressionFailed ? t("skippedLargeFile") : "";
 
-      try {
-        // 1. Compression côté navigateur — si elle échoue (fichier trop volumineux
-        // ou format que le décodeur ne supporte pas), on envoie l'original tel
-        // quel plutôt que de bloquer le dépôt : mieux vaut un fichier plus lourd
-        // que pas de dépôt du tout.
-        const originalDuration = await getAudioDuration(file);
-        let uploadBlob = file;
-        let usedExtension = currentExtension();
-        let compressionFailed = false;
-        let compressionErrorMsg = "";
+      if (!compressionFailed) {
         try {
           uploadBlob = await compressAudio(file, (pct) => {
-            progressFill.style.width = `${Math.round(pct * 0.5)}%`; // la compression occupe la première moitié de la barre
+            statusRow.textContent = `${t("compressing")} ${Math.round(pct)}%`;
           });
           usedExtension = "mp3";
         } catch (compressErr) {
           compressionFailed = true;
           compressionErrorMsg = compressErr.message || String(compressErr);
-          console.warn("Compression impossible, envoi du fichier original :", compressionErrorMsg);
         }
-        statusEl.textContent = "";
-
-        // 2. Préparation de l'envoi
-        const res = await fetch("/.netlify/functions/get-upload-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            preacherId,
-            cultDate: dateEl.value,
-            title: titleEl.value.trim(),
-            fileExtension: usedExtension,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Erreur lors de la préparation de l'envoi.");
-
-        progressFill.style.width = "55%";
-
-        // 3. Envoi du fichier (compressé, ou original si la compression a échoué)
-        await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("PUT", data.uploadUrl);
-          xhr.setRequestHeader("Content-Type", compressionFailed ? (file.type || "audio/mpeg") : "audio/mpeg");
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) progressFill.style.width = `${55 + (e.loaded / e.total) * 40}%`;
-          };
-          xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Échec de l'envoi (${xhr.status})`)));
-          xhr.onerror = () => reject(new Error("Échec de l'envoi (connexion)."));
-          xhr.send(uploadBlob);
-        });
-
-        progressFill.style.width = "97%";
-
-        const confirmRes = await fetch("/.netlify/functions/confirm-upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: data.key, durationSeconds: originalDuration }),
-        });
-        let confirmOk = confirmRes.ok;
-        if (!confirmRes.ok) {
-          const confirmData = await confirmRes.json().catch(() => ({}));
-          console.error("confirm-upload a échoué :", confirmRes.status, confirmData.error);
-        }
-
-        const savedPct = compressionFailed ? 0 : Math.round((1 - uploadBlob.size / file.size) * 100);
-        progressFill.style.width = "100%";
-        const compressionNote = compressionFailed
-          ? ` (envoyé sans compression — ${compressionErrorMsg})`
-          : ` (compression : -${Math.max(0, savedPct)}% de poids)`;
-        const confirmNote = confirmOk ? "" : " ⚠️ La confirmation finale a échoué — utilise \"Marquer comme prêt\" ci-dessous si besoin.";
-        statusEl.textContent = `✅ Message déposé avec succès${compressionNote} : ${data.key}${confirmNote}`;
-        statusEl.className = "status-ok";
-        fileEl.value = "";
-        titleEl.value = "";
-        updatePreview();
-        loadUploads();
-      } catch (err) {
-        statusEl.textContent = `❌ ${err.message}`;
-        statusEl.className = "status-err";
-        submitBtn.disabled = false;
       }
+
+      statusRow.textContent = t("uploading");
+      const res = await fetch("/.netlify/functions/get-upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preacherId, cultDate: item.date, title: item.title.trim(), fileExtension: usedExtension }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur lors de la préparation de l'envoi.");
+
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", data.uploadUrl);
+        xhr.setRequestHeader("Content-Type", "audio/mpeg");
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) statusRow.textContent = `${t("uploading")} ${Math.round((e.loaded / e.total) * 100)}%`;
+        };
+        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Échec de l'envoi (${xhr.status})`)));
+        xhr.onerror = () => reject(new Error("Échec de l'envoi (connexion)."));
+        xhr.send(uploadBlob);
+      });
+
+      const confirmRes = await fetch("/.netlify/functions/confirm-upload", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: data.key, durationSeconds: originalDuration }),
+      });
+
+      const savedPct = compressionFailed ? 0 : Math.round((1 - uploadBlob.size / file.size) * 100);
+      rowEl.classList.add(confirmRes.ok ? "done" : "error");
+      statusRow.textContent = compressionFailed
+        ? `✅ ${t("sentNoCompression")} (${compressionErrorMsg})`
+        : `✅ -${Math.max(0, savedPct)}% (${t("compressed")})`;
+      if (!confirmRes.ok) statusRow.textContent += ` ⚠️ ${t("confirmFailed")}`;
+    }
+
+    submitBtn.addEventListener("click", async () => {
+      if (queue.length === 0) return;
+      submitBtn.disabled = true;
+      progressWrap.style.display = "block";
+      statusEl.textContent = "";
+      statusEl.className = "";
+
+      try {
+        await uploadCoverIfNeeded();
+      } catch (err) {
+        console.warn("Échec de l'envoi de la pochette :", err.message);
+      }
+
+      let successCount = 0;
+      for (let i = 0; i < queue.length; i++) {
+        progressFill.style.width = `${Math.round((i / queue.length) * 100)}%`;
+        queueStatusEl.textContent = t("processingFile", { n: i + 1, total: queue.length });
+        try {
+          await uploadOneItem(queue[i], i);
+          successCount++;
+        } catch (err) {
+          const statusRow = document.getElementById(`queue-status-${i}`);
+          statusRow.textContent = `❌ ${err.message}`;
+          document.getElementById(`queue-row-${i}`).classList.add("error");
+        }
+      }
+      progressFill.style.width = "100%";
+      queueStatusEl.textContent = "";
+      statusEl.textContent = t("batchDone", { ok: successCount, total: queue.length });
+      statusEl.className = "status-ok";
+      queue = [];
+      fileEl.value = "";
+      renderQueue();
+      loadUploads();
+      submitBtn.disabled = true;
     });
 
     document.getElementById("langFr").addEventListener("click", () => { currentLang = "fr"; localStorage.setItem("ov-deposit-lang", "fr"); applyLang(); });

@@ -1,6 +1,81 @@
 // ============================================================
-// i18n — dictionnaire FR/EN et fonctions de traduction
+// Compte utilisateur (Supabase — connexion par lien magique, sans mot de passe)
 // ============================================================
+// Remplace ces deux valeurs par celles de ton projet Supabase
+// (Project Settings → API). Ce sont des valeurs publiques, faites pour
+// être exposées côté navigateur — la vraie sécurité vient des règles RLS
+// définies dans supabase-schema.sql, pas du secret de ces valeurs.
+const SUPABASE_URL = "https://afyltjntywbzchwcjdtp.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmeWx0am50eXdiemNod2NqZHRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2MzAyMzMsImV4cCI6MjEwMDIwNjIzM30.TJQl1tMYgEafP7MyP-xwV2UPlu4tEQWkGjJixmUO8Kg";
+
+let supabaseClient = null;
+let currentUser = null;
+function initSupabase() {
+  if (SUPABASE_URL.includes("TON-PROJET") || typeof supabase === "undefined") return; // pas encore configuré
+  supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    currentUser = session?.user || null;
+    refreshAccountUI();
+    if (event === "SIGNED_IN") handleSignIn();
+  });
+  supabaseClient.auth.getSession().then(({ data }) => {
+    currentUser = data?.session?.user || null;
+    refreshAccountUI();
+  });
+}
+async function sendMagicLink(email) {
+  if (!supabaseClient) return { error: "Compte non configuré pour l'instant." };
+  const { error } = await supabaseClient.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.origin + window.location.pathname },
+  });
+  return { error: error?.message };
+}
+async function signOutAccount() {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  currentUser = null;
+  refreshAccountUI();
+}
+function isLoggedIn() { return !!currentUser; }
+
+// Au premier login, on reprend ce qui existait déjà en local plutôt que
+// de le perdre — l'utilisateur ne sent jamais de rupture.
+async function handleSignIn() {
+  if (!supabaseClient || !currentUser) return;
+  try {
+    const { data: existingFavs } = await supabaseClient.from("favorites").select("message_id").eq("user_id", currentUser.id).limit(1);
+    const { data: existingPlaylists } = await supabaseClient.from("playlists").select("id").eq("user_id", currentUser.id).limit(1);
+    const accountIsEmpty = (!existingFavs || existingFavs.length === 0) && (!existingPlaylists || existingPlaylists.length === 0);
+    if (accountIsEmpty) await migrateLocalDataToAccount();
+    else await pullAccountData();
+    if (state.currentView === "profile" || state.currentView === "favorites") RENDERERS[state.currentView]();
+  } catch (err) {
+    console.warn("Connexion au compte :", err.message);
+  }
+}
+
+async function migrateLocalDataToAccount() {
+  if (!supabaseClient || !currentUser) return;
+  try {
+    const localFavs = readJSON(LS.favorites, []);
+    for (const f of localFavs) {
+      await supabaseClient.from("favorites").upsert({ user_id: currentUser.id, message_id: f.messageId });
+    }
+    const localPlaylists = readJSON(LS.playlists, []);
+    for (const pl of localPlaylists) {
+      const { data: inserted } = await supabaseClient.from("playlists").insert({ user_id: currentUser.id, name: pl.name }).select().single();
+      if (inserted) {
+        for (const mid of pl.messageIds) {
+          await supabaseClient.from("playlist_items").upsert({ playlist_id: inserted.id, message_id: mid });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Migration des données locales vers le compte :", err.message);
+  }
+}
+
+
 const I18N = {
   fr: {
     "nav.home": "Accueil", "nav.search": "Recherche", "nav.live": "Direct", "nav.favorites": "Favoris", "nav.profile": "Profil",
@@ -35,6 +110,7 @@ const I18N = {
     "player.videoNote": "Contenu vidéo YouTube — la lecture s'interrompt si l'écran se verrouille.",
     "audioPlayer.note": "Lecture audio native — continue en fond et écran verrouillé.",
     "audioPlayer.download": "Télécharger",
+    "player.joinLive": "Rejoindre le direct",
     "player.fromSeries": "Depuis « {name} »",
     "playlists.title": "Mes playlists", "playlists.create": "Créer une playlist", "playlists.empty": "Aucune playlist pour l'instant.",
     "playlists.count": "{n} message|{n} messages",
@@ -49,6 +125,10 @@ const I18N = {
     "profile.you": "Toi", "profile.memberSince": "Membre depuis {year}",
     "profile.favorites": "Favoris", "profile.playlists": "Playlists", "profile.listened": "Écoutés",
     "profile.myPlaylists": "Mes playlists", "profile.language": "Langue de l'application", "profile.appearance": "Apparence", "profile.about": "À propos",
+    "account.title": "Créer un compte", "account.subtitle": "Retrouve tes favoris et playlists sur n'importe quel appareil — sans mot de passe.",
+    "account.emailPlaceholder": "ton@email.com", "account.sendLink": "Recevoir un lien de connexion",
+    "account.sending": "Envoi en cours…", "account.linkSent": "✅ Lien envoyé ! Vérifie ta boîte mail.",
+    "account.connected": "Compte connecté", "account.signOut": "Se déconnecter",
     "profile.history": "Historique d'écoute", "profile.noHistory": "Aucune écoute récente.",
     "about.tagline": "Jesus at the center", "about.mission2": "Des prédicateurs francophones et anglophones, réunis en un seul endroit, pour écouter ou regarder où que tu sois, dans ta langue, à ton rythme.",
     "about.whatYouCanDo": "Ce que tu peux faire",
@@ -100,6 +180,7 @@ const I18N = {
     "player.videoNote": "YouTube video content — playback stops if the screen locks.",
     "audioPlayer.note": "Native audio playback — continues in the background and on the lock screen.",
     "audioPlayer.download": "Download",
+    "player.joinLive": "Join live",
     "player.fromSeries": "From \"{name}\"",
     "playlists.title": "My playlists", "playlists.create": "Create a playlist", "playlists.empty": "No playlists yet.",
     "playlists.count": "{n} message|{n} messages",
@@ -114,6 +195,10 @@ const I18N = {
     "profile.you": "You", "profile.memberSince": "Member since {year}",
     "profile.favorites": "Favorites", "profile.playlists": "Playlists", "profile.listened": "Listened",
     "profile.myPlaylists": "My playlists", "profile.language": "App language", "profile.appearance": "Appearance", "profile.about": "About",
+    "account.title": "Create an account", "account.subtitle": "Find your favorites and playlists on any device — no password needed.",
+    "account.emailPlaceholder": "your@email.com", "account.sendLink": "Send me a sign-in link",
+    "account.sending": "Sending…", "account.linkSent": "✅ Link sent! Check your inbox.",
+    "account.connected": "Account connected", "account.signOut": "Sign out",
     "profile.history": "Listening history", "profile.noHistory": "No recent listening.",
     "about.tagline": "Jesus at the center", "about.mission2": "French and English-speaking preachers, gathered in one place, so you can listen or watch wherever you are, in your language, at your own pace.",
     "about.whatYouCanDo": "What you can do",
@@ -234,7 +319,10 @@ function splitPreacherTitle(fullName) {
 
 // Pochette audio : pas de vraie photo disponible, donc un modèle à deux lignes —
 // le titre (Dr/Apôtre/Pasteur...) en haut, le nom en dessous, comme le gabarit fourni.
-function audioCoverHTML(preacherName, size = "small", extraStyle = "") {
+function audioCoverHTML(preacherName, size = "small", extraStyle = "", coverUrl = null) {
+  if (coverUrl) {
+    return `<div class="audio-cover audio-cover-${size}" style="${extraStyle}; background:none; padding:0"><img src="${coverUrl}" alt="" style="width:100%; height:100%; object-fit:cover" /></div>`;
+  }
   const { title, name } = splitPreacherTitle(preacherName);
   const titleSize = size === "large" ? "clamp(14px,3.2vw,18px)" : "9px";
   const nameSize = size === "large" ? "clamp(20px,5.5vw,30px)" : "13px";
@@ -244,6 +332,26 @@ function audioCoverHTML(preacherName, size = "small", extraStyle = "") {
       <div class="audio-cover-name" style="font-size:${nameSize}">${escapeHtml(name)}</div>
       <div class="audio-cover-rule"></div>
     </div>
+  </div>`;
+}
+// Applique une pochette directement sur un élément existant (sans jamais remplacer
+// l'élément lui-même) — évite tout bricolage fragile de type outerHTML/replace.
+function applyCoverToElement(el, preacherName, size, coverUrl) {
+  el.className = `audio-cover audio-cover-${size}`;
+  el.style.cssText = "";
+  if (coverUrl) {
+    el.style.background = "none";
+    el.style.padding = "0";
+    el.innerHTML = `<img src="${coverUrl}" alt="" style="width:100%; height:100%; object-fit:cover" />`;
+    return;
+  }
+  const { title, name } = splitPreacherTitle(preacherName);
+  const titleSize = size === "large" ? "clamp(14px,3.2vw,18px)" : "9px";
+  const nameSize = size === "large" ? "clamp(20px,5.5vw,30px)" : "13px";
+  el.innerHTML = `<div class="audio-cover-inner">
+    ${title ? `<div class="audio-cover-title" style="font-size:${titleSize}">${escapeHtml(title)}</div>` : ""}
+    <div class="audio-cover-name" style="font-size:${nameSize}">${escapeHtml(name)}</div>
+    <div class="audio-cover-rule"></div>
   </div>`;
 }
 function getMessageById(id) { return allMessages({ includeAllTypes: true }).find((m) => m.id === id); }
@@ -286,21 +394,43 @@ function isFavorite(messageId) { return getFavorites().some((f) => f.messageId =
 function toggleFavorite(messageId) {
   const favs = getFavorites();
   const idx = favs.findIndex((f) => f.messageId === messageId);
-  if (idx >= 0) favs.splice(idx, 1); else favs.push({ messageId });
+  const wasRemoved = idx >= 0;
+  if (wasRemoved) favs.splice(idx, 1); else favs.push({ messageId });
   writeJSON(LS.favorites, favs);
+  if (supabaseClient && currentUser) {
+    const query = wasRemoved
+      ? supabaseClient.from("favorites").delete().eq("user_id", currentUser.id).eq("message_id", messageId)
+      : supabaseClient.from("favorites").upsert({ user_id: currentUser.id, message_id: messageId });
+    query.then(({ error }) => { if (error) console.warn("Sync favoris :", error.message); });
+  }
 }
 function getPlaylists() { return readJSON(LS.playlists, []); }
 function savePlaylists(list) { writeJSON(LS.playlists, list); }
 function createPlaylist(name, messageIds) {
   const list = getPlaylists();
-  list.unshift({ id: "pl-" + Date.now(), name, messageIds: [...messageIds] });
+  const id = "pl-" + Date.now();
+  list.unshift({ id, name, messageIds: [...messageIds] });
   savePlaylists(list);
+  if (supabaseClient && currentUser) {
+    supabaseClient.from("playlists").insert({ user_id: currentUser.id, name }).select().single()
+      .then(({ data, error }) => {
+        if (error || !data) { console.warn("Sync playlist :", error?.message); return; }
+        messageIds.forEach((mid) => {
+          supabaseClient.from("playlist_items").upsert({ playlist_id: data.id, message_id: mid })
+            .then(({ error }) => { if (error) console.warn("Sync playlist item :", error.message); });
+        });
+      });
+  }
 }
 function getHistory() { return readJSON(LS.history, []); }
 function recordHistory(messageId) {
   let h = getHistory().filter((id) => id !== messageId);
   h.unshift(messageId);
   writeJSON(LS.history, h.slice(0, 30));
+  if (supabaseClient && currentUser) {
+    supabaseClient.from("history").upsert({ user_id: currentUser.id, message_id: messageId, played_at: new Date().toISOString() })
+      .then(({ error }) => { if (error) console.warn("Sync historique :", error.message); });
+  }
 }
 
 // --- Reprise de lecture : position en secondes par message ---
@@ -316,11 +446,52 @@ function savePosition(messageId, seconds) {
   const keys = Object.keys(positions);
   if (keys.length > 50) delete positions[keys[0]];
   writeJSON(LS_POSITIONS, positions);
+  if (supabaseClient && currentUser) {
+    supabaseClient.from("playback_positions")
+      .upsert({ user_id: currentUser.id, message_id: messageId, position_seconds: Math.floor(seconds), updated_at: new Date().toISOString() })
+      .then(({ error }) => { if (error) console.warn("Sync position :", error.message); });
+  }
 }
 function clearPosition(messageId) {
   const positions = readJSON(LS_POSITIONS, {});
   delete positions[messageId];
   writeJSON(LS_POSITIONS, positions);
+  if (supabaseClient && currentUser) {
+    supabaseClient.from("playback_positions").delete().eq("user_id", currentUser.id).eq("message_id", messageId)
+      .then(({ error }) => { if (error) console.warn("Sync position :", error.message); });
+  }
+}
+
+// Au login (ou restauration de session), on récupère ce qui existe déjà sur le
+// compte et on remplace le contenu local par celui-ci — pour que retrouver
+// ses favoris/playlists sur un autre appareil fonctionne vraiment.
+async function pullAccountData() {
+  if (!supabaseClient || !currentUser) return;
+  try {
+    const { data: favs } = await supabaseClient.from("favorites").select("message_id").eq("user_id", currentUser.id);
+    if (favs) writeJSON(LS.favorites, favs.map((f) => ({ messageId: f.message_id })));
+
+    const { data: playlists } = await supabaseClient.from("playlists").select("id, name").eq("user_id", currentUser.id);
+    if (playlists) {
+      const withItems = await Promise.all(playlists.map(async (pl) => {
+        const { data: items } = await supabaseClient.from("playlist_items").select("message_id").eq("playlist_id", pl.id);
+        return { id: pl.id, name: pl.name, messageIds: (items || []).map((i) => i.message_id) };
+      }));
+      savePlaylists(withItems);
+    }
+
+    const { data: hist } = await supabaseClient.from("history").select("message_id").eq("user_id", currentUser.id).order("played_at", { ascending: false }).limit(30);
+    if (hist) writeJSON(LS.history, hist.map((h) => h.message_id));
+
+    const { data: positions } = await supabaseClient.from("playback_positions").select("message_id, position_seconds").eq("user_id", currentUser.id);
+    if (positions) {
+      const posMap = {};
+      positions.forEach((p) => { posMap[p.message_id] = p.position_seconds; });
+      writeJSON(LS_POSITIONS, posMap);
+    }
+  } catch (err) {
+    console.warn("Récupération des données du compte :", err.message);
+  }
 }
 
 // --- Recommandation : score les messages selon les thèmes et prédicateurs
@@ -511,7 +682,7 @@ async function renderAudioHome() {
   document.getElementById("homeFeatured").innerHTML = `
     <div class="section-title">${t("home.featured")}</div>
     <div class="featured" data-mid="${featured.id}">
-      ${audioCoverHTML(fp ? fp.name : "", "small", "position:absolute; inset:0; width:100%; height:100%; border-radius:0")}
+      ${audioCoverHTML(fp ? fp.name : "", "small", "position:absolute; inset:0; width:100%; height:100%; border-radius:0", featured.coverUrl)}
       <div class="scrim">
         <div class="title">${escapeHtml(formatTitle(featured.title))}</div>
         <div class="meta">${escapeHtml(fp ? fp.name : "")} · ${formatMessageDate(featured.cultDate)}${featured.durationSeconds ? " · " + formatDuration(featured.durationSeconds) : ""}</div>
@@ -522,7 +693,7 @@ async function renderAudioHome() {
   document.getElementById("homeRail").innerHTML = audioMsgs.slice(1, 9).map((m) => {
     const p = getPreacher(m.preacherId);
     return `<div class="rail-item" data-mid="${m.id}">
-      ${audioCoverHTML(p ? p.name : "", "small")}
+      ${audioCoverHTML(p ? p.name : "", "small", "", m.coverUrl)}
       <div class="title">${escapeHtml(formatTitle(m.title))}</div>
       <div class="preacher">${escapeHtml(p ? p.name : "")}</div>
       <div class="date">${formatMessageDate(m.cultDate)}</div>
@@ -564,13 +735,7 @@ async function renderAudioPlayer() {
   state.nowPlayingMessage = m;
 
   const coverEl = document.getElementById("audioPlayerCover");
-  const { title: pTitle, name: pName } = splitPreacherTitle(p ? p.name : "");
-  coverEl.className = "audio-cover audio-cover-large";
-  coverEl.innerHTML = `<div class="audio-cover-inner">
-    ${pTitle ? `<div class="audio-cover-title" style="font-size:clamp(14px,3.2vw,18px)">${escapeHtml(pTitle)}</div>` : ""}
-    <div class="audio-cover-name" style="font-size:clamp(20px,5.5vw,30px)">${escapeHtml(pName)}</div>
-    <div class="audio-cover-rule"></div>
-  </div>`;
+  applyCoverToElement(coverEl, p ? p.name : "", "large", m.coverUrl);
   document.getElementById("audioPlayerTitle").textContent = formatTitle(m.title);
   document.getElementById("audioPlayerPreacher").textContent = p ? p.name : "";
   const dateEl = document.getElementById("audioPlayerDate");
@@ -703,7 +868,7 @@ async function renderAudioPreacher() {
 
   container.innerHTML = audioMsgs.map((m) => `
     <div class="message-row" data-mid="${m.id}">
-      <div style="width:76px; height:76px; flex-shrink:0">${audioCoverHTML(p.name, "small")}</div>
+      <div style="width:76px; height:76px; flex-shrink:0">${audioCoverHTML(p.name, "small", "", m.coverUrl)}</div>
       <div class="info">
         <div class="title">${escapeHtml(formatTitle(m.title))}</div>
         <div class="meta">${formatMessageDate(m.cultDate)}${m.durationSeconds ? " · " + formatDuration(m.durationSeconds) : ""}</div>
@@ -979,12 +1144,28 @@ function renderPlayer() {
     btn.classList.add("active");
   }));
 
+  let playPauseLock = false;
   document.getElementById("playPause").onclick = () => {
-    if (!ytPlayer) return;
-    ytPlayer.getPlayerState() === 1 ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+    if (!ytPlayer || playPauseLock) return;
+    playPauseLock = true;
+    const state = ytPlayer.getPlayerState();
+    // En direct, l'état peut osciller (mise en tampon) — on se base sur "en cours de lecture ou de mise en tampon"
+    // pour décider si l'intention est de mettre en pause plutôt que de relancer inutilement.
+    const isActive = state === 1 || state === 3;
+    isActive ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+    setTimeout(() => { playPauseLock = false; }, 300);
   };
   document.getElementById("skipBack").onclick = () => ytPlayer && ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 15), true);
   document.getElementById("skipFwd").onclick = () => ytPlayer && ytPlayer.seekTo(ytPlayer.getCurrentTime() + 15, true);
+
+  const liveBtn = document.getElementById("liveJumpBtn");
+  if (m.isLive) {
+    liveBtn.style.display = "flex";
+    liveBtn.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block"></span>${t("player.joinLive")}`;
+    liveBtn.onclick = () => { if (ytPlayer && ytPlayer.getDuration) ytPlayer.seekTo(ytPlayer.getDuration(), true); };
+  } else {
+    liveBtn.style.display = "none";
+  }
   document.getElementById("scrubTrack").onclick = (e) => {
     if (!ytPlayer) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -1007,9 +1188,7 @@ function renderPlayer() {
       document.getElementById("scrubFill").style.width = dur ? `${(cur / dur) * 100}%` : "0%";
       document.getElementById("timeElapsed").textContent = formatSeconds(cur);
       document.getElementById("timeTotal").textContent = formatSeconds(dur);
-      document.getElementById("playPause").innerHTML = ytPlayer.getPlayerState() === 1
-        ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>';
+      updatePlayIcon(ytPlayer.getPlayerState());
       // Sauvegarde la position toutes les ~5s (10 x l'intervalle de 500ms) pour la reprise de lecture
       if (Math.floor(cur) % 5 === 0) {
         if (dur && cur >= dur - 10) clearPosition(m.id); else savePosition(m.id, cur);
@@ -1023,7 +1202,10 @@ function renderPlayer() {
     ytPlayer = new YT.Player("ytPlayerTarget", {
       videoId: m.videoId,
       playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1 },
-      events: { onReady: (e) => { e.target.playVideo(); startPlayback(); } },
+      events: {
+        onReady: (e) => { e.target.playVideo(); startPlayback(); },
+        onStateChange: (e) => { updatePlayIcon(e.data); refreshMiniPlayer(); },
+      },
     });
   } else {
     ytPlayer.loadVideoById(m.videoId);
@@ -1066,6 +1248,49 @@ function clearSleepTimer() {
   refreshSleepTimerButton();
 }
 
+function refreshAccountUI() {
+  const el = document.getElementById("accountCard");
+  if (!el) return;
+
+  if (!supabaseClient) {
+    el.style.display = "none";
+    return;
+  }
+  el.style.display = "block";
+
+  if (currentUser) {
+    el.innerHTML = `
+      <div class="account-email">${escapeHtml(currentUser.email)}</div>
+      <div class="account-sub">${t("account.connected")}</div>
+      <button class="account-btn secondary" id="signOutBtn">${t("account.signOut")}</button>`;
+    document.getElementById("signOutBtn").addEventListener("click", signOutAccount);
+  } else {
+    el.innerHTML = `
+      <div class="account-title">${t("account.title")}</div>
+      <div class="account-sub">${t("account.subtitle")}</div>
+      <input type="email" id="accountEmailInput" placeholder="${t("account.emailPlaceholder")}" />
+      <button class="account-btn" id="sendMagicLinkBtn">${t("account.sendLink")}</button>
+      <div class="account-status" id="accountStatus"></div>`;
+    document.getElementById("sendMagicLinkBtn").addEventListener("click", async () => {
+      const email = document.getElementById("accountEmailInput").value.trim();
+      const statusEl = document.getElementById("accountStatus");
+      if (!email) return;
+      statusEl.textContent = t("account.sending");
+      const { error } = await sendMagicLink(email);
+      statusEl.textContent = error ? `❌ ${error}` : t("account.linkSent");
+    });
+  }
+}
+
+function updatePlayIcon(playerState) {
+  const btn = document.getElementById("playPause");
+  if (!btn) return;
+  const isActive = playerState === 1 || playerState === 3; // en lecture ou en cours de mise en tampon
+  btn.innerHTML = isActive
+    ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>';
+}
+
 function refreshMiniPlayer() {
   const bar = document.getElementById("miniPlayer");
   const onPlayerScreen = state.currentView === "player" || state.currentView === "audio-player";
@@ -1082,7 +1307,7 @@ function refreshMiniPlayer() {
   document.getElementById("miniPlayerPreacher").textContent = p ? p.name : "";
   const coverEl = document.getElementById("miniPlayerCover");
   coverEl.innerHTML = state.nowPlayingType === "audio"
-    ? `<div style="width:100%;height:100%;background:linear-gradient(135deg,var(--accent),var(--accent-2))"></div>`
+    ? (m.coverUrl ? `<img src="${m.coverUrl}" alt="" />` : `<div style="width:100%;height:100%;background:linear-gradient(135deg,var(--accent),var(--accent-2))"></div>`)
     : `<img src="${thumbUrl(m.videoId)}" alt="" />`;
 
   const playBtn = document.getElementById("miniPlayerPlayPause");
@@ -1336,6 +1561,7 @@ function renderFavorites() {
 }
 
 function renderProfile() {
+  refreshAccountUI();
   document.getElementById("statFavorites").textContent = getFavorites().length;
   document.getElementById("statPlaylists").textContent = getPlaylists().length;
   document.getElementById("statHistory").textContent = getHistory().length;
@@ -1472,6 +1698,7 @@ function init() {
   setupThemeToggle("themeToggle");
   setupAppearanceSwitch();
   setupMiniPlayer();
+  initSupabase();
   setInterval(() => { if ((localStorage.getItem(LS.theme) || "auto") === "auto") refreshTheme(); }, 15 * 60 * 1000);
   setInterval(() => { if (state.currentView === "home") document.getElementById("greetingText").textContent = computeGreeting(); }, 5 * 60 * 1000);
 

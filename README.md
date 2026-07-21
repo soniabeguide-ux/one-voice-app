@@ -68,3 +68,26 @@ Le fichier est maintenant compressé en MP3 64 kbps mono **directement dans le n
 ## Récupération YouTube : coupure au 1er janvier 2023
 
 Mise à jour dans `data.js`, `recuperer-messages.html`, `scripts/backfill.mjs` et la fonction quotidienne — il faudra relancer une récupération complète pour que le catalogue remonte jusque-là.
+
+---
+
+## Comptes utilisateurs (Supabase — lien magique par email)
+
+### Ce qu'il te reste à faire
+
+1. Va sur **supabase.com**, crée un compte et un nouveau projet (gratuit)
+2. Dans **SQL Editor**, colle le contenu de `supabase-schema.sql` (à la racine de ce dossier) et exécute-le — ça crée les tables et les règles de sécurité
+3. Dans **Project Settings → API**, récupère :
+   - **Project URL**
+   - **anon public key** (celle-ci est publique par nature, pas secrète comme les clés R2/YouTube)
+4. Ouvre `app.js`, tout en haut, remplace :
+   - `SUPABASE_URL` par ton Project URL
+   - `SUPABASE_ANON_KEY` par ta clé anon
+5. Dans **Authentication → URL Configuration** sur Supabase, ajoute l'adresse de ton site déployé dans "Redirect URLs" (sinon le lien magique ne ramènera pas la personne au bon endroit)
+6. Redéploie
+
+### Comment ça fonctionne
+- Un champ email dans Profil, un bouton "Recevoir un lien de connexion" — la personne clique le lien reçu par mail, elle est connectée, sans mot de passe
+- Au premier login : si son compte est vide, ses favoris/playlists déjà présents sur cet appareil sont automatiquement transférés dessus
+- Aux logins suivants (nouvel appareil) : ses données du compte remplacent celles de l'appareil, pour une vraie continuité
+- Tant qu'aucune valeur Supabase n'est configurée, l'app continue de fonctionner exactement comme avant (tout en local, sans compte) — rien ne casse en attendant que tu configures ça
